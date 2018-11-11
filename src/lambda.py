@@ -1,17 +1,20 @@
 import json
 import traceback
 
+
 def isIPv6NetACL(cidr):
     if cidr == "::/0":
         return "Ipv6CidrBlock"
     else:
         return "CidrBlock"
 
+
 def isIPv6Route(cidr):
     if cidr == "::/0":
         return "DestinationIpv6CidrBlock"
     else:
         return "DestinationCidrBlock"
+
 
 def handler(event, context):
 
@@ -22,12 +25,6 @@ def handler(event, context):
         "status": "success"
     }
     try:
-        params = {
-            "params": event["templateParameterValues"],
-            "template": event["fragment"],
-            "account_id": event["accountId"],
-            "region": event["region"]
-        }
         resources = {}
         outputs = {}
         response = event["fragment"]
@@ -53,12 +50,12 @@ def handler(event, context):
 
                     outputs[properties["Details"]["VPCName"]] = {
                         "Description": properties["Details"]["VPCName"],
-                        "Value": { 
-                            "Ref" : properties["Details"]["VPCName"] 
+                        "Value": {
+                            "Ref": properties["Details"]["VPCName"]
                         },
-                        "Export" : { 
-                            "Name" : {
-                                "Fn::Sub": "${AWS::StackName}-VPCid" 
+                        "Export": {
+                            "Name": {
+                                "Fn::Sub": "${AWS::StackName}-VPCid"
                             }
                         }
                     }
@@ -74,7 +71,7 @@ def handler(event, context):
                                     "AmazonProvidedIpv6CidrBlock": "true"
                                 }
                             }
-                        
+
                             resources["EgressGateway"] = {
                                 "Type": "AWS::EC2::EgressOnlyInternetGateway",
                                 "Properties": {
@@ -84,184 +81,185 @@ def handler(event, context):
                                 }
                             }
 
-                    resources[properties["DHCP"]["Name"]] = {
-                        "Type": "AWS::EC2::DHCPOptions",
-                        "Properties": {
-                            "DomainNameServers": [properties["DHCP"]["DNSServers"]],
-                            "NtpServers": [properties["DHCP"]["NTPServers"]],
-                            "NetbiosNodeType": properties["DHCP"]["NTBType"],
-                            "Tags": [{
-                                "Key": "Name",
-                                "Value": properties["DHCP"]["Name"]
-                            }]
-                        }
-                    }
-
-                    resources[properties["DHCP"]["Name"]+"Association"] = {
-                        "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
-                        "Properties": {
-                            "DhcpOptionsId": {
-                                "Ref": properties["DHCP"]["Name"]
-                            },
-                            "VpcId": {
-                                "Ref": properties["Details"]["VPCName"]
-                            }
-                        }
-                    }
-
-                    resources["InternetGateway"] = {
-                        "Type": "AWS::EC2::InternetGateway",
-                        "Properties": {
-                            "Tags": [
-                                {
-                                    "Key": "Name",
-                                    "Value": "InternetGateway"
-                                }
-                            ]
-                        }
-                    }
-
-                    resources["IGWVPCGatewayAttachment"] = {
-                        "Type": "AWS::EC2::VPCGatewayAttachment",
-                        "Properties": {
-                            "InternetGatewayId": {
-                                "Ref": "InternetGateway"
-                            },
-                            "VpcId": {
-                                "Ref": properties["Details"]["VPCName"]
-                            }
-                        }
-                    }
-
-                    resources["VPCGatewayAttachment"] = {
-                        "Type": "AWS::EC2::VPCGatewayAttachment",
-                        "Properties": {
-                            "VpcId": {
-                                "Ref": properties["Details"]["VPCName"]
-                            },
-                            "VpnGatewayId": {
-                                "Ref": "VGW"
-                            }
-                        }
-                    }
-
-                    resources["VPCFlowLogsRole"] = {
-                        "Type": "AWS::IAM::Role",
-                        "Properties": {
-                            "AssumeRolePolicyDocument": {
-                                "Version": "2012-10-17",
-                                "Statement": [
-                                    {
-                                        "Effect": "Allow",
-                                        "Principal": {
-                                            "Service": [
-                                                "vpc-flow-logs.amazonaws.com"
-                                            ]
-                                        },
-                                        "Action": [
-                                            "sts:AssumeRole"
-                                        ]
-                                    }
-                                ]
-                            },
-                            "Path": "/",
-                            "Policies": [
-                                {
-                                    "PolicyName": "root",
-                                    "PolicyDocument": {
-                                        "Version": "2012-10-17",
-                                        "Statement": [
-                                            {
-                                                "Effect": "Allow",
-                                                "Action": [
-                                                    "logs:*"
-                                                ],
-                                                "Resource": "arn:aws:logs:*:*:*"
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    }
-
-                    resources["VPCFlowLogs"] = {
-                        "Type" : "AWS::EC2::FlowLog",
-                        "Properties" : {
-                            "DeliverLogsPermissionArn" : { 
-                                "Fn::GetAtt" : ["VPCFlowLogsRole", "Arn"] 
-                            },
-                            "LogGroupName" : "FlowLogsGroup",
-                            "ResourceId" : { 
-                                "Ref" : properties["Details"]["VPCName"]
-                            },
-                            "ResourceType" : "VPC",
-                            "TrafficType" : "ALL"
-                        }
-                    }
-
-                    if "RouteTables" in properties:
-                        for routetable, objects in properties["RouteTables"].iteritems():
-                            resources[routetable] = {
-                                "Type": "AWS::EC2::RouteTable",
+                            resources[properties["DHCP"]["Name"]] = {
+                                "Type": "AWS::EC2::DHCPOptions",
                                 "Properties": {
-                                    "Tags": [
-                                        {
-                                            "Key": "Name",
-                                            "Value": routetable
-                                        }
-                                    ],
+                                    "DomainNameServers": [properties["DHCP"]["DNSServers"]],
+                                    "NtpServers": [properties["DHCP"]["NTPServers"]],
+                                    "NetbiosNodeType": properties["DHCP"]["NTBType"],
+                                    "Tags": [{
+                                        "Key": "Name",
+                                        "Value": properties["DHCP"]["Name"]
+                                    }]
+                                }
+                            }
+
+                            resources[properties["DHCP"]["Name"] + "Association"] = {
+                                "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+                                "Properties": {
+                                    "DhcpOptionsId": {
+                                        "Ref": properties["DHCP"]["Name"]
+                                    },
                                     "VpcId": {
                                         "Ref": properties["Details"]["VPCName"]
                                     }
                                 }
                             }
 
-                            outputs[routetable] = {
-                                "Description": routetable,
-                                "Value": { 
-                                    "Ref" : routetable 
-                                },
-                                "Export" : { 
-                                    "Name" : {
-                                        "Fn::Sub": "${AWS::StackName}-RouteTable-"+routetable 
+                            resources["InternetGateway"] = {
+                                "Type": "AWS::EC2::InternetGateway",
+                                "Properties": {
+                                    "Tags": [
+                                        {
+                                            "Key": "Name",
+                                            "Value": "InternetGateway"
+                                        }
+                                    ]
+                                }
+                            }
+
+                            resources["IGWVPCGatewayAttachment"] = {
+                                "Type": "AWS::EC2::VPCGatewayAttachment",
+                                "Properties": {
+                                    "InternetGatewayId": {
+                                        "Ref": "InternetGateway"
+                                    },
+                                    "VpcId": {
+                                        "Ref": properties["Details"]["VPCName"]
                                     }
                                 }
                             }
 
-                            resources[routetable + "RoutePropagation"] = {
-                                "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+                            resources["VPCGatewayAttachment"] = {
+                                "Type": "AWS::EC2::VPCGatewayAttachment",
                                 "Properties": {
-                                    "RouteTableIds": [
-                                        {
-                                            "Ref": routetable
-                                        }
-                                    ],
+                                    "VpcId": {
+                                        "Ref": properties["Details"]["VPCName"]
+                                    },
                                     "VpnGatewayId": {
                                         "Ref": "VGW"
                                     }
-                                },
-                                "DependsOn": [
-                                    "VPCGatewayAttachment"
-                                ]
+                                }
                             }
-                            if objects is not None:
-                                for route in objects:
-                                    resources[route["RouteName"]] = {
-                                        "Type": "AWS::EC2::Route",
+
+                            resources["VPCFlowLogsRole"] = {
+                                "Type": "AWS::IAM::Role",
+                                "Properties": {
+                                    "AssumeRolePolicyDocument": {
+                                        "Version": "2012-10-17",
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Principal": {
+                                                    "Service": [
+                                                        "vpc-flow-logs.amazonaws.com"
+                                                    ]
+                                                },
+                                                "Action": [
+                                                    "sts:AssumeRole"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "Path": "/",
+                                    "Policies": [
+                                        {
+                                            "PolicyName": "root",
+                                            "PolicyDocument": {
+                                                "Version": "2012-10-17",
+                                                "Statement": [
+                                                    {
+                                                        "Effect": "Allow",
+                                                        "Action": [
+                                                            "logs:*"
+                                                        ],
+                                                        "Resource": "arn:aws:logs:*:*:*"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+
+                            resources["VPCFlowLogs"] = {
+                                "Type": "AWS::EC2::FlowLog",
+                                "Properties": {
+                                    "DeliverLogsPermissionArn": {
+                                        "Fn::GetAtt": ["VPCFlowLogsRole", "Arn"]
+                                    },
+                                    "LogGroupName": "FlowLogsGroup",
+                                    "ResourceId": {
+                                        "Ref": properties["Details"]["VPCName"]
+                                    },
+                                    "ResourceType": "VPC",
+                                    "TrafficType": "ALL"
+                                }
+                            }
+
+                            if "RouteTables" in properties:
+                                for routetable, objects in properties["RouteTables"].iteritems():
+                                    resources[routetable] = {
+                                        "Type": "AWS::EC2::RouteTable",
                                         "Properties": {
-                                            isIPv6Route(route["RouteCIDR"]): route["RouteCIDR"],
-                                            "GatewayId": {
-                                                "Ref": route["RouteGW"]
-                                            },
-                                            "RouteTableId": {
-                                                "Ref": routetable
+                                            "Tags": [
+                                                {
+                                                    "Key": "Name",
+                                                    "Value": routetable
+                                                }
+                                            ],
+                                            "VpcId": {
+                                                "Ref": properties["Details"]["VPCName"]
                                             }
                                         }
                                     }
 
-                    if "Subnets" in properties:
-                        subnet_count = 0
+                                    outputs[routetable] = {
+                                        "Description": routetable,
+                                        "Value": {
+                                            "Ref": routetable
+                                        },
+                                        "Export": {
+                                            "Name": {
+                                                "Fn::Sub": "${AWS::StackName}-RouteTable-" + routetable
+                                            }
+                                        }
+                                    }
+
+                                    resources[routetable + "RoutePropagation"] = {
+                                        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+                                        "Properties": {
+                                            "RouteTableIds": [
+                                                {
+                                                    "Ref": routetable
+                                                }
+                                            ],
+                                            "VpnGatewayId": {
+                                                "Ref": "VGW"
+                                            }
+                                        },
+                                        "DependsOn": [
+                                            "VPCGatewayAttachment"
+                                        ]
+                                    }
+                                    if objects is not None:
+                                        for route in objects:
+                                            resources[route["RouteName"]] = {
+                                                "Type": "AWS::EC2::Route",
+                                                "Properties": {
+                                                    isIPv6Route(route["RouteCIDR"]): route["RouteCIDR"],
+                                                    "GatewayId": {
+                                                        "Ref": route["RouteGW"]
+                                                    },
+                                                    "RouteTableId": {
+                                                        "Ref": routetable
+                                                    }
+                                                }
+                                            }
+
+                                            if "Subnets" in properties:
+                                                subnet_count = 0
+
                         for subnet, objects in properties["Subnets"].iteritems():
                             resources[subnet] = {
                                 "Type": "AWS::EC2::Subnet",
@@ -275,12 +273,10 @@ def handler(event, context):
                                         ]
                                     },
                                     "CidrBlock": objects["CIDR"],
-                                    "Tags": [
-                                        {
-                                            "Key": "Name",
-                                            "Value": subnet
-                                        }
-                                    ],
+                                    "Tags": [{
+                                        "Key": "Name",
+                                        "Value": subnet
+                                    }],
                                     "VpcId": {
                                         "Ref": properties["Details"]["VPCName"]
                                     }
@@ -289,11 +285,11 @@ def handler(event, context):
 
                             outputs[subnet] = {
                                 "Description": subnet,
-                                "Value": { 
-                                    "Ref" : subnet 
+                                "Value": {
+                                    "Ref": subnet
                                 },
-                                "Export" : { 
-                                    "Name" : {
+                                "Export": {
+                                    "Name": {
                                         "Fn::Sub": "${AWS::StackName}-Subnet-" + subnet
                                     }
                                 }
@@ -325,46 +321,44 @@ def handler(event, context):
                             subnet_count = subnet_count + 1
                         if "IPv6" in properties["Details"]:
                             subnet_itr = 0
+
                             for subnet, objects in properties["Subnets"].iteritems():
                                 if properties["Details"]["IPv6"]:
                                     resources[subnet]["DependsOn"] = "IPv6Block"
                                     resources[subnet]["Properties"]["AssignIpv6AddressOnCreation"] = True
-                                    resources[subnet]["Properties"]["Ipv6CidrBlock"] = { 
-                                        "Fn::Select": [ 
-                                            subnet_itr, 
-                                            { 
+                                    resources[subnet]["Properties"]["Ipv6CidrBlock"] = {
+                                        "Fn::Select": [
+                                            subnet_itr,
+                                            {
                                                 "Fn::Cidr": [
-                                                    { 
+                                                    {
                                                         "Fn::Select": [
-                                                            0, 
-                                                            { 
-                                                                "Fn::GetAtt": [ 
+                                                            0,
+                                                            {
+                                                                "Fn::GetAtt": [
                                                                     properties["Details"]["VPCName"],
-                                                                    "Ipv6CidrBlocks" 
+                                                                    "Ipv6CidrBlocks"
                                                                 ]
                                                             }
                                                         ]
-                                                    }, 
-                                                subnet_count, 
-                                                64
+                                                    },
+                                                    subnet_count,
+                                                    64
                                                 ]
                                             }
                                         ]
                                     }
-                                    subnet_itr = subnet_itr +1
-                                    
-                    
+                                    subnet_itr = subnet_itr + 1
+
                     if "NetworkACLs" in properties:
                         for networkacl, objects in properties["NetworkACLs"].iteritems():
                             resources[networkacl] = {
                                 "Type": "AWS::EC2::NetworkAcl",
                                 "Properties": {
-                                    "Tags": [
-                                        {
-                                            "Key": "Name",
-                                            "Value": networkacl
-                                        }
-                                    ],
+                                    "Tags": [{
+                                        "Key": "Name",
+                                        "Value": networkacl
+                                    }],
                                     "VpcId": {
                                         "Ref": properties["Details"]["VPCName"]
                                     }
@@ -373,12 +367,12 @@ def handler(event, context):
 
                             outputs[networkacl] = {
                                 "Description": networkacl,
-                                "Value": { 
-                                    "Ref" : networkacl 
+                                "Value": {
+                                    "Ref": networkacl
                                 },
-                                "Export" : { 
-                                    "Name" : {
-                                        "Fn::Sub": "${AWS::StackName}-NACL-" + networkacl 
+                                "Export": {
+                                    "Name": {
+                                        "Fn::Sub": "${AWS::StackName}-NACL-" + networkacl
                                     }
                                 }
                             }
@@ -403,136 +397,136 @@ def handler(event, context):
                                     }
                                 }
 
-                    if "NATGateways" in properties:
-                        for natgw, objects in properties["NATGateways"].iteritems():
-                            resources["EIP"+natgw] = {
-                                "Type": "AWS::EC2::EIP",
-                                "Properties": {
-                                    "Domain": "vpc"
-                                }
-                            }
-
-                            outputs["EIP"+natgw] = {
-                                "Description": "EIP for " + natgw,
-                                "Value": { 
-                                    "Ref" : "EIP"+natgw 
-                                },
-                                "Export" : { 
-                                    "Name" : {
-                                        "Fn::Sub": "${AWS::StackName}-EIP-"+natgw 
-                                    }
-                                }
-                            }
-                            
-                            resources[natgw] = {
-                                "Type": "AWS::EC2::NatGateway",
-                                "Properties": {
-                                    "AllocationId": {
-                                        "Fn::GetAtt": [
-                                            "EIP"+natgw,
-                                            "AllocationId"
-                                        ]
-                                    },
-                                    "SubnetId": {
-                                        "Ref": objects["Subnet"]
-                                    },
-                                    "Tags": [
-                                        {
-                                            "Key": "Name",
-                                            "Value": natgw
-                                        }
-                                    ]
-                                }
-                            }
-
-                            outputs[natgw] = {
-                                "Description": natgw,
-                                "Value": { 
-                                    "Ref" : natgw 
-                                },
-                                "Export" : { 
-                                    "Name" : {
-                                        "Fn::Sub": "${AWS::StackName}-NATGW-"+natgw 
-                                    }
-                                }
-                            }
-                            
-                            resources["Route"+natgw] = {
-                                "Type": "AWS::EC2::Route",
-                                "Properties": {
-                                    "DestinationCidrBlock": "0.0.0.0/0",
-                                    "NatGatewayId": {
-                                        "Ref": natgw
-                                    },
-                                    "RouteTableId": {
-                                        "Ref": objects["Routetable"]
-                                    }
-                                }
-                            }
-                            if "IPv6" in properties["Details"]:
-                                if properties["Details"]["IPv6"]:
-                                    resources["Route"+natgw+"IPv6"] = {
-                                        "Type": "AWS::EC2::Route",
-                                        "Properties": {
-                                            "DestinationIpv6CidrBlock": "::/0",
-                                            "EgressOnlyInternetGatewayId": {
-                                                "Ref": "EgressGateway"
-                                            },
-                                            "RouteTableId": {
-                                                "Ref": objects["Routetable"]
+                                if "NATGateways" in properties:
+                                    for natgw, objects in properties["NATGateways"].iteritems():
+                                        resources["EIP" + natgw] = {
+                                            "Type": "AWS::EC2::EIP",
+                                            "Properties": {
+                                                "Domain": "vpc"
                                             }
                                         }
-                                    }
-                                    
-                    if "SecurityGroups" in properties:
-                        for secgroup, objects in properties["SecurityGroups"].iteritems():
-                            resources[secgroup] = {
-                                "Type" : "AWS::EC2::SecurityGroup",
-                                "Properties" : {
-                                    "GroupName": secgroup,
-                                    "GroupDescription" : objects["GroupDescription"],
-                                    "VpcId": {
-                                        "Ref": properties["Details"]["VPCName"]
-                                    }
-                                }
-                            }
 
-                            if "SecurityGroupIngress" in objects:
-                                resources[secgroup]["Properties"]["SecurityGroupIngress"] = []
+                                        outputs["EIP" + natgw] = {
+                                            "Description": "EIP for " + natgw,
+                                            "Value": {
+                                                "Ref": "EIP" + natgw
+                                            },
+                                            "Export": {
+                                                "Name": {
+                                                    "Fn::Sub": "${AWS::StackName}-EIP-" + natgw
+                                                }
+                                            }
+                                        }
+
+                                        resources[natgw] = {
+                                            "Type": "AWS::EC2::NatGateway",
+                                            "Properties": {
+                                                "AllocationId": {
+                                                    "Fn::GetAtt": [
+                                                        "EIP" + natgw,
+                                                        "AllocationId"
+                                                    ]
+                                                },
+                                                "SubnetId": {
+                                                    "Ref": objects["Subnet"]
+                                                },
+                                                "Tags": [
+                                                    {
+                                                        "Key": "Name",
+                                                        "Value": natgw
+                                                    }
+                                                ]
+                                            }
+                                        }
+
+                                        outputs[natgw] = {
+                                            "Description": natgw,
+                                            "Value": {
+                                                "Ref": natgw
+                                            },
+                                            "Export": {
+                                                "Name": {
+                                                    "Fn::Sub": "${AWS::StackName}-NATGW-" + natgw
+                                                }
+                                            }
+                                        }
+
+                                        resources["Route" + natgw] = {
+                                            "Type": "AWS::EC2::Route",
+                                            "Properties": {
+                                                "DestinationCidrBlock": "0.0.0.0/0",
+                                                "NatGatewayId": {
+                                                    "Ref": natgw
+                                                },
+                                                "RouteTableId": {
+                                                    "Ref": objects["Routetable"]
+                                                }
+                                            }
+                                        }
+                                        if "IPv6" in properties["Details"]:
+                                            if properties["Details"]["IPv6"]:
+                                                resources["Route" + natgw + "IPv6"] = {
+                                                    "Type": "AWS::EC2::Route",
+                                                    "Properties": {
+                                                        "DestinationIpv6CidrBlock": "::/0",
+                                                        "EgressOnlyInternetGatewayId": {
+                                                            "Ref": "EgressGateway"
+                                                        },
+                                                        "RouteTableId": {
+                                                            "Ref": objects["Routetable"]
+                                                        }
+                                                    }
+                                                }
+
+                                                if "SecurityGroups" in properties:
+                                                    for secgroup, objects in properties["SecurityGroups"].iteritems():
+                                                        resources[secgroup] = {
+                                                            "Type": "AWS::EC2::SecurityGroup",
+                                                            "Properties": {
+                                                                "GroupName": secgroup,
+                                                                "GroupDescription": objects["GroupDescription"],
+                                                                "VpcId": {
+                                                                    "Ref": properties["Details"]["VPCName"]
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if "SecurityGroupIngress" in objects:
+                                                            resources[secgroup]["Properties"]["SecurityGroupIngress"] = []
                                 for rule in objects["SecurityGroupIngress"]:
                                     resources[secgroup]["Properties"]["SecurityGroupIngress"].append({
-                                            "IpProtocol" : rule[0],
-                                            "FromPort" : rule[1],
-                                            "ToPort" : rule[2],
-                                            "CidrIp" : rule[3],
-                                            "Description" : rule[4]
-                                        })
+                                        "IpProtocol": rule[0],
+                                        "FromPort": rule[1],
+                                        "ToPort": rule[2],
+                                        "CidrIp": rule[3],
+                                        "Description": rule[4]
+                                    })
 
-                            if "SecurityGroupEgress" in objects:
-                                resources[secgroup]["Properties"]["SecurityGroupEgress"] = []
+                                    if "SecurityGroupEgress" in objects:
+                                        resources[secgroup]["Properties"]["SecurityGroupEgress"] = []
                                 for rule in objects["SecurityGroupEgress"]:
                                     resources[secgroup]["Properties"]["SecurityGroupEgress"].append({
-                                            "IpProtocol" : rule[0],
-                                            "FromPort" : rule[1],
-                                            "ToPort" : rule[2],
-                                            "CidrIp" : rule[3],
-                                            "Description" : rule[4]
-                                        })
-                            if "Tags" in objects:
-                                resources[secgroup]["Properties"]["Tags"] = []
-                                for k,v in objects["Tags"].iteritems():
+                                        "IpProtocol": rule[0],
+                                        "FromPort": rule[1],
+                                        "ToPort": rule[2],
+                                        "CidrIp": rule[3],
+                                        "Description": rule[4]
+                                    })
+                                    if "Tags" in objects:
+                                        resources[secgroup]["Properties"]["Tags"] = []
+                                for k, v in objects["Tags"].iteritems():
                                     resources[secgroup]["Properties"]["Tags"].append({
-                                        "Key" : k,
-                                        "Value" : v
-                                        })
+                                        "Key": k,
+                                        "Value": v
+                                    })
 
-                    if "Endpoints" in properties:
-                        for endpoint, objects in properties["Endpoints"].iteritems():
-                            santisedendpoint = endpoint.replace("-", "").replace(".", "")
-                            resources[santisedendpoint+"EndPoint"] = {
+                                    if "Endpoints" in properties:
+                                        for endpoint, objects in properties["Endpoints"].iteritems():
+                                            santisedendpoint = endpoint.replace("-", "").replace(".", "")
+                            resources[santisedendpoint + "EndPoint"] = {
                                 "Type": "AWS::EC2::VPCEndpoint",
                                 "Properties": {
-                                    "ServiceName": { "Fn::Join": [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, "."+endpoint ] ] },
+                                    "ServiceName": {"Fn::Join": ["", ["com.amazonaws.", {"Ref": "AWS::Region"}, "." + endpoint]]},
                                     "VpcEndpointType": objects["Type"],
                                     "VpcId": {
                                         "Ref": properties["Details"]["VPCName"]
@@ -542,23 +536,23 @@ def handler(event, context):
 
                             if objects["Type"] == "Gateway":
                                 if "PolicyDocument" in objects:
-                                    resources[santisedendpoint+"EndPoint"]["Properties"]["PolicyDocument"] = objects["PolicyDocument"]
+                                    resources[santisedendpoint + "EndPoint"]["Properties"]["PolicyDocument"] = objects["PolicyDocument"]
                                 if "RouteTableIds" in objects:
-                                    resources[santisedendpoint+"EndPoint"]["Properties"]["RouteTableIds"] = []
+                                    resources[santisedendpoint + "EndPoint"]["Properties"]["RouteTableIds"] = []
                                     for routetable in objects["RouteTableIds"]:
-                                        resources[santisedendpoint+"EndPoint"]["Properties"]["RouteTableIds"].append({"Ref": routetable })
+                                        resources[santisedendpoint + "EndPoint"]["Properties"]["RouteTableIds"].append({"Ref": routetable})
 
                             if objects["Type"] == "Interface":
-                                resources[santisedendpoint+"EndPoint"]["Properties"]["PrivateDnsEnabled"] = True
+                                resources[santisedendpoint + "EndPoint"]["Properties"]["PrivateDnsEnabled"] = True
                                 if "SubnetIds" in objects:
-                                    resources[santisedendpoint+"EndPoint"]["Properties"]["SubnetIds"] = []
+                                    resources[santisedendpoint + "EndPoint"]["Properties"]["SubnetIds"] = []
                                     for subnet in objects["SubnetIds"]:
-                                        resources[santisedendpoint+"EndPoint"]["Properties"]["SubnetIds"].append({"Ref": subnet })
+                                        resources[santisedendpoint + "EndPoint"]["Properties"]["SubnetIds"].append({"Ref": subnet})
                                 if "SecurityGroupIds" in objects:
-                                    resources[santisedendpoint+"EndPoint"]["Properties"]["SecurityGroupIds"] = []
+                                    resources[santisedendpoint + "EndPoint"]["Properties"]["SecurityGroupIds"] = []
                                     for secgroup in objects["SecurityGroupIds"]:
-                                        resources[santisedendpoint+"EndPoint"]["Properties"]["SecurityGroupIds"].append({"Ref": secgroup })
-                                    
+                                        resources[santisedendpoint + "EndPoint"]["Properties"]["SecurityGroupIds"].append({"Ref": secgroup})
+                # consider `else` to print error
         response["Resources"] = resources
         response["Outputs"] = outputs
         macro_response["fragment"] = response
