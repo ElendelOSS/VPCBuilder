@@ -47,7 +47,7 @@ RuleName: "rule_number,protocol_number,[allow|deny],egress[true|false],cidr[0-25
 AWSTemplateFormatVersion: 2010-09-09
 Description: Private VPC Template
 Parameters:
-  VGW: {Description: VPC Gateway, Type: String, Default: vgw-a0b1c2d3}
+  VGW: {Description: VPC Gateway, Type: String, Default: vgw-012345678}
 Mappings: {}
 Resources:
 
@@ -89,58 +89,270 @@ Resources:
                     {Subnet: ReservedNet2, Routetable: InternalRT2}
                 NATGW3:
                     {Subnet: ReservedNet3, Routetable: InternalRT3}
+            SecurityGroups:
+                VPCEndpoint:
+                    GroupDescription: VPC Endpoint Interface Firewall Rules
+                    SecurityGroupIngress:
+                    - [icmp,-1,-1,172.16.0.0/20, All ICMP Traffic]
+                    - [tcp,0,65535,172.16.0.0/20, All TCP Traffic]
+                    - [udp,0,65535,172.16.0.0/20, All UDP Traffic]
+                    SecurityGroupEgress:
+                    - [icmp,-1,-1,172.16.0.0/20, All ICMP Traffic]
+                    - [tcp,0,65535,172.16.0.0/20, All TCP Traffic]
+                    - [udp,0,65535,172.16.0.0/20, All UDP Traffic]
+                    Tags:
+                      Name: VPCEndpoint
+            Endpoints:
+                cloudformation:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                cloudtrail:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                codebuild:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                config:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                dynamodb:
+                    Type: Gateway
+                    RouteTableIds:
+                      - PublicRT
+                      - InternalRT1
+                      - InternalRT2
+                      - InternalRT3
+                    PolicyDocument: |
+                        {
+                            "Version":"2012-10-17",
+                            "Statement":[
+                                {
+                                    "Effect":"Allow",
+                                    "Principal": "*",
+                                    "Action":["s3:*"],
+                                    "Resource":["*"]
+                                }
+                            ]
+                        }
+                ec2:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                ec2messages:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                elasticloadbalancing:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                events:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                execute-api:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                kinesis-streams:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                kms:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                logs:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                monitoring:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                sagemaker.api:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                sagemaker.runtime:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                s3:
+                    Type: Gateway
+                    RouteTableIds:
+                      - PublicRT
+                      - InternalRT1
+                      - InternalRT2
+                      - InternalRT3
+                    PolicyDocument: |
+                        {
+                            "Version":"2012-10-17",
+                            "Statement":[
+                                {
+                                    "Effect":"Allow",
+                                    "Principal": "*",
+                                    "Action":["s3:*"],
+                                    "Resource":["*"]
+                                }
+                            ]
+                        }
+                secretsmanager:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                servicecatalog:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                sns:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                ssm:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
+                ssmmessages:
+                    Type: Interface
+                    SubnetIds:
+                      - ReservedMgmt1
+                      - ReservedMgmt2
+                      - ReservedMgmt3
+                    SecurityGroupIds:
+                      - VPCEndpoint
             NetworkACLs:
                 RestrictedSubnetAcl: 
                     RestrictedSubnetAclEntryInTCPUnReserved: "90,6,allow,false,0.0.0.0/0,1024,65535"
                     RestrictedSubnetAclEntryInUDPUnReserved: "91,17,allow,false,0.0.0.0/0,1024,65535"
                     RestrictedSubnetAclEntryInTCPUnReservedIPv6: "92,6,allow,false,::/0,1024,65535"
                     RestrictedSubnetAclEntryInUDPUnReservedIPv6: "93,17,allow,false,::/0,1024,65535"
-                    RestrictedSubnetAclEntryOutTCPUnReserved: 90,6,allow,true,0.0.0.0/0,1024,65535
-                    RestrictedSubnetAclEntryOutUDPUnReserved: 91,17,allow,true,0.0.0.0/0,1024,65535
-                    RestrictedSubnetAclEntryOutTCPUnReservedIPv6: 92,6,allow,true,::/0,1024,65535
-                    RestrictedSubnetAclEntryOutUDPUnReservedIPv6: 93,17,allow,true,::/0,1024,65535
-                    RestrictedSubnetAclEntryOutPuppet: 94,6,allow,true,172.16.0.0/16,8140,8140
-                    RestrictedSubnetAclEntryOutHTTP: 101,6,allow,true,0.0.0.0/0,80,80
-                    RestrictedSubnetAclEntryOutHTTPS: 102,6,allow,true,0.0.0.0/0,443,443
-                    RestrictedSubnetAclEntryOutSSH: 103,6,allow,true,0.0.0.0/0,22,22
-                    RestrictedSubnetAclEntryOutHTTPIPv6: 104,6,allow,true,::/0,80,80
-                    RestrictedSubnetAclEntryOutHTTPSIPv6: 105,6,allow,true,::/0,443,443
-                    RestrictedSubnetAclEntryOutSSHIPv6: 106,6,allow,true,::/0,22,22
-                    RestrictedSubnetAclEntryInHTTP: 101,6,allow,false,0.0.0.0/0,80,80
-                    RestrictedSubnetAclEntryInHTTPS: 102,6,allow,false,0.0.0.0/0,443,443
-                    RestrictedSubnetAclEntryInHTTP: 103,6,allow,false,::/0,80,80
-                    RestrictedSubnetAclEntryInHTTPS: 104,6,allow,false,::/0,443,443
-                    RestrictedSubnetAclEntryIn: 110,-1,allow,false,172.16.0.0/16,1,65535
-                    RestrictedSubnetAclEntryOut: 110,-1,allow,true,172.16.0.0/16,1,65535
-                    RestrictedSubnetAclEntryNTP: 120,6,allow,true,0.0.0.0/0,123,123
-                    RestrictedSubnetAclEntryInSquid2: 140,6,allow,false,172.16.0.0/16,3128,3128
-                    RestrictedSubnetAclEntryInDNSTCP: 150,6,allow,false,172.16.0.0/16,53,53
-                    RestrictedSubnetAclEntryOutDNSTCP: 150,6,allow,true,0.0.0.0/0,53,53
-                    RestrictedSubnetAclEntryOutDNSTCPIPv6: 151,6,allow,true,::/0,53,53
-                    RestrictedSubnetAclEntryInDNSUDP: 160,17,allow,false,172.16.0.0/16,53,53
-                    RestrictedSubnetAclEntryOutDNSUDP: 160,17,allow,true,0.0.0.0/0,53,53
-                    RestrictedSubnetAclEntryOutDNSUDPIPv6: 161,17,allow,true,::/0,53,53
-                    RestrictedSubnetAclEntryInNetBios: 170,6,allow,false,172.16.0.0/16,389,389
-                    RestrictedSubnetAclEntryOutNetBios: 170,6,allow,true,172.16.0.0/16,389,389
-                    RestrictedSubnetAclEntryInNetBios1: 80,6,allow,false,172.16.0.0/16,137,139
-                    RestrictedSubnetAclEntryOutNetBios1: 180,6,allow,true,172.16.0.0/16,137,139
+                    RestrictedSubnetAclEntryOutTCPUnReserved: "90,6,allow,true,0.0.0.0/0,1024,65535"
+                    RestrictedSubnetAclEntryOutUDPUnReserved: "91,17,allow,true,0.0.0.0/0,1024,65535"
+                    RestrictedSubnetAclEntryOutTCPUnReservedIPv6: "92,6,allow,true,::/0,1024,65535"
+                    RestrictedSubnetAclEntryOutUDPUnReservedIPv6: "93,17,allow,true,::/0,1024,65535"
+                    RestrictedSubnetAclEntryOutPuppet: "94,6,allow,true,172.16.0.0/16,8140,8140"
+                    RestrictedSubnetAclEntryOutHTTP: "101,6,allow,true,0.0.0.0/0,80,80"
+                    RestrictedSubnetAclEntryOutHTTPS: "102,6,allow,true,0.0.0.0/0,443,443"
+                    RestrictedSubnetAclEntryOutSSH: "103,6,allow,true,0.0.0.0/0,22,22"
+                    RestrictedSubnetAclEntryOutHTTPIPv6: "104,6,allow,true,::/0,80,80"
+                    RestrictedSubnetAclEntryOutHTTPSIPv6: "105,6,allow,true,::/0,443,443"
+                    RestrictedSubnetAclEntryOutSSHIPv6: "106,6,allow,true,::/0,22,22"
+                    RestrictedSubnetAclEntryInHTTP: "101,6,allow,false,0.0.0.0/0,80,80"
+                    RestrictedSubnetAclEntryInHTTPS: "102,6,allow,false,0.0.0.0/0,443,443"
+                    RestrictedSubnetAclEntryInHTTPIPv6: "103,6,allow,false,::/0,80,80"
+                    RestrictedSubnetAclEntryInHTTPSIPv6: "104,6,allow,false,::/0,443,443"
+                    RestrictedSubnetAclEntryIn: "110,-1,allow,false,172.16.0.0/16,1,65535"
+                    RestrictedSubnetAclEntryOut: "110,-1,allow,true,172.16.0.0/16,1,65535"
+                    RestrictedSubnetAclEntryNTP: "120,6,allow,true,0.0.0.0/0,123,123"
+                    RestrictedSubnetAclEntryInSquid2: "140,6,allow,false,172.16.0.0/16,3128,3128"
+                    RestrictedSubnetAclEntryInDNSTCP: "150,6,allow,false,172.16.0.0/16,53,53"
+                    RestrictedSubnetAclEntryOutDNSTCP: "150,6,allow,true,0.0.0.0/0,53,53"
+                    RestrictedSubnetAclEntryOutDNSTCPIPv6: "151,6,allow,true,::/0,53,53"
+                    RestrictedSubnetAclEntryInDNSUDP: "160,17,allow,false,172.16.0.0/16,53,53"
+                    RestrictedSubnetAclEntryOutDNSUDP: "160,17,allow,true,0.0.0.0/0,53,53"
+                    RestrictedSubnetAclEntryOutDNSUDPIPv6: "161,17,allow,true,::/0,53,53"
+                    RestrictedSubnetAclEntryInNetBios: "170,6,allow,false,172.16.0.0/16,389,389"
+                    RestrictedSubnetAclEntryOutNetBios: "170,6,allow,true,172.16.0.0/16,389,389"
+                    RestrictedSubnetAclEntryInNetBios1: "80,6,allow,false,172.16.0.0/16,137,139"
+                    RestrictedSubnetAclEntryOutNetBios1: "180,6,allow,true,172.16.0.0/16,137,139"
                 InternalSubnetAcl:
-                    InternalSubnetAclEntryIn: 100,-1,allow,false,172.16.0.0/16,1,65535
-                    InternalSubnetAclEntryOut: 100,-1,allow,true,172.16.0.0/16,1,65535
-                    InternalSubnetAclEntryInTCPUnreserved: 102,6,allow,false,0.0.0.0/0,1024,65535
-                    InternalSubnetAclEntryInUDPUnreserved: 103,17,allow,false,0.0.0.0/0,1024,65535
-                    InternalSubnetAclEntryInTCPUnreservedIPv6: 104,6,allow,false,::/0,1024,65535
-                    InternalSubnetAclEntryInUDPUnreservedIPv6: 105,17,allow,false,::/0,1024,65535
-                    InternalSubnetAclEntryOutHTTP: 102,6,allow,true,0.0.0.0/0,80,80
-                    InternalSubnetAclEntryOutHTTPS: 103,6,allow,true,0.0.0.0/0,443,443
-                    InternalSubnetAclEntryOutHTTPIPv6: 104,6,allow,true,::/0,80,80
-                    InternalSubnetAclEntryOutHTTPSIPv6: 105,6,allow,true,::/0,443,443
-                    InternalSubnetAclEntryOutTCPUnreserved: 106,6,allow,true,172.16.0.0/16,1024,65535
-                    InternalSubnetAclEntryOutUDPUnreserved: 107,6,allow,true,172.16.0.0/16,1024,65535
-                    InternalSubnetAclEntryOutTCPDNS: 110,6,allow,true,0.0.0.0/0,53,53
-                    InternalSubnetAclEntryOutUDPDNS: 111,17,allow,true,0.0.0.0/0,53,53
-                    InternalSubnetAclEntryOutTCPDNSIPv6: 112,6,allow,true,::/0,53,53
-                    InternalSubnetAclEntryOutUDPDNSIPv6: 113,17,allow,true,::/0,53,53
-                    InternalSubnetAclEntryOutSSH: 150,6,allow,true,0.0.0.0/0,22,22
+                    InternalSubnetAclEntryIn: "100,-1,allow,false,172.16.0.0/16,1,65535"
+                    InternalSubnetAclEntryOut: "100,-1,allow,true,172.16.0.0/16,1,65535"
+                    InternalSubnetAclEntryInTCPUnreserved: "102,6,allow,false,0.0.0.0/0,1024,65535"
+                    InternalSubnetAclEntryInUDPUnreserved: "103,17,allow,false,0.0.0.0/0,1024,65535"
+                    InternalSubnetAclEntryInTCPUnreservedIPv6: "104,6,allow,false,::/0,1024,65535"
+                    InternalSubnetAclEntryInUDPUnreservedIPv6: "105,17,allow,false,::/0,1024,65535"
+                    InternalSubnetAclEntryOutHTTP: "102,6,allow,true,0.0.0.0/0,80,80"
+                    InternalSubnetAclEntryOutHTTPS: "103,6,allow,true,0.0.0.0/0,443,443"
+                    InternalSubnetAclEntryOutHTTPIPv6: "104,6,allow,true,::/0,80,80"
+                    InternalSubnetAclEntryOutHTTPSIPv6: "105,6,allow,true,::/0,443,443"
+                    InternalSubnetAclEntryOutTCPUnreserved: "106,6,allow,true,172.16.0.0/16,1024,65535"
+                    InternalSubnetAclEntryOutUDPUnreserved: "107,6,allow,true,172.16.0.0/16,1024,65535"
+                    InternalSubnetAclEntryOutTCPDNS: "110,6,allow,true,0.0.0.0/0,53,53"
+                    InternalSubnetAclEntryOutUDPDNS: "111,17,allow,true,0.0.0.0/0,53,53"
+                    InternalSubnetAclEntryOutTCPDNSIPv6: "112,6,allow,true,::/0,53,53"
+                    InternalSubnetAclEntryOutUDPDNSIPv6: "113,17,allow,true,::/0,53,53"
+                    InternalSubnetAclEntryOutSSH: "150,6,allow,true,0.0.0.0/0,22,22"
 Transform: "012345678901::VPC"
 ```
