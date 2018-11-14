@@ -29,7 +29,7 @@ def handler(event, context):
         outputs = {}
         response = event["fragment"]
         for k in list(response["Resources"].keys()):
-            if response["Resources"][k]["Type"] == "Kablamo::Network::VPC":
+            if response["Resources"][k]["Type"] == "Elendel::Network::VPC":
                 if "Properties" in response["Resources"][k]:
                     properties = response["Resources"][k]["Properties"]
                     resources[properties["Details"]["VPCName"]] = {

@@ -2,18 +2,60 @@
 
 Builds out a "fully" featured VPC summarising the complexity associated with a VPC such as Internet & Customer Gateways, Subnets, Routetables and NATGateways.
 
-It also adds in VPC Flowlogs with an IAM role and supports full dynamic allocation of IPv6 with the VPC and to each subnet. 
+It also adds in VPC Flowlogs with an IAM role and supports full dynamic allocation of IPv6 with the VPC and to each subnet.
 
 The IPv6 handles Egress Internet Gateway and default route against ::/0
 
-## Build Package
+## Deployment
+Notice that in [`vpc.yaml`](./vpc.yaml) the resources is not and AWS supported type.  Its specification is defined in [`transform.yaml`](./transform.yaml).  In order to submit cloudformation templates using this `Type` you must have the transform deployed first.
 
-make buildPackage
+### Deploy the Transform
 
-## Upload package to S3
-Fill in your bucket and profile (utilises a crude aws cli s3 upload command)
+First make an S3 bucket and add it to the `makefile` at `BUCKET_NAME`.  In order for the deployment to work you must also set `USER_PROFILE` (use `default` if not required).
 
-make uploadToS3
+Deploy the transform:
+
+```bash
+make deployTransform
+```
+
+### Use the transform to build a VPC
+
+#### Configure your Template
+
+Open `vpc.yaml` and replace the account number with your own so that the template knows which transform to apply:
+
+```yaml
+Transform: "<ACCT_goes_here>::VPC"
+```
+
+#### Virtual Private Gateway
+
+Ideally you should never spin up a VPGW in Cloudformation. If you ever plan to attach it to a Direct Connect Virtual Interface you wont be able to tear up & down the VPC without destorying the VIF attachment. Either by hand in the console (shudder) or ideally via the CLI/SDK call with the following
+
+```bash
+aws ec2 create-vpn-gateway --type ipsec.1 --amazon-side-asn <AWS BGP ASN>
+```
+
+You can omit the AWS BGP ASN if you're not sure what you would like to make it and can happily utilise the standard ASN provided by AWS.
+
+```bash
+aws ec2 create-vpn-gateway --type ipsec.1
+```
+
+**N.B the "VpnGatewayId" that is returned, you will need it in the final step**
+
+#### Build the VPC
+
+Now that the transform is deployed, you have created a VPN gateway and you have enabled the `vpc.yaml` to use it you are ready to build the VPC.
+
+```bash
+aws cloudformation deploy \
+        --capabilities CAPABILITY_IAM \
+        --template-file vpc.yaml \
+        --stack-name 'VPC' \
+        --parameter-overrides VGW=vgw-05811955cb8607072
+```
 
 ## To Do
 
@@ -26,16 +68,6 @@ Adding proper IPv6 regex and handling with NetworkACLs
 
 Utilise the yaml structure below as a template, changing the Account ID in the transformation definiton.
 It will support the removal of Subnets, RouteTables, NATGateways and NetworkACLs.
-
-## Virtual Private Gateway
-
-Ideally you should never spin up a VPGW in Cloudformation. If you ever plan to attach it to a Direct Connect Virtual Interface you wont be able to tear up & down the VPC without destorying the VIF attachment. Either by hand in the console (shudder) or ideally via the CLI/SDK call with the following 
-
-```yaml
-Command: aws ec2 create-vpn-gateway --type ipsec.1 --amazon-side-asn <AWS BGP ASN>
-```
-
-You can omit the AWS BGP ASN if you're not sure what you would like to make it and can happily utilise the standard ASN provided by AWS.
 
 ## Network ACL Breakdown
 
@@ -51,12 +83,12 @@ Parameters:
 Mappings: {}
 Resources:
 
-    KABLAMOBUILDVPC:
-        Type: Kablamo::Network::VPC
+    ELENDELBUILDVPC:
+        Type: Elendel::Network::VPC
         Properties:
             CIDR: 172.16.0.0/20
             Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
-            Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}            
+            Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             Subnets:
                 ReservedMgmt1: {CIDR: 172.16.0.0/26, AZ: 0, NetACL: InternalSubnetAcl, RouteTable: InternalRT1 }
@@ -302,7 +334,7 @@ Resources:
                     SecurityGroupIds:
                       - VPCEndpoint
             NetworkACLs:
-                RestrictedSubnetAcl: 
+                RestrictedSubnetAcl:
                     RestrictedSubnetAclEntryInTCPUnReserved: "90,6,allow,false,0.0.0.0/0,1024,65535"
                     RestrictedSubnetAclEntryInUDPUnReserved: "91,17,allow,false,0.0.0.0/0,1024,65535"
                     RestrictedSubnetAclEntryInTCPUnReservedIPv6: "92,6,allow,false,::/0,1024,65535"

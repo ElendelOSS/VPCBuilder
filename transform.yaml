@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  LambdaBucket: {Description: Lambda Bucket Location, Type: String, Default: yourbucket.lambda.functions}
-  LambdaVersion: {Description: Lambda Bucket Location, Type: String, Default: release-tag}
+  LambdaBucket: {Description: Lambda Bucket Location, Type: String}
+  LambdaVersion: {Description: Lambda Bucket Location, Type: String}
 Resources:
   VPCTransformExecutionRole:
     Type: AWS::IAM::Role

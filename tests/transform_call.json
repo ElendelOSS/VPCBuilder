@@ -6,8 +6,8 @@
     "fragment": {
         "AWSTemplateFormatVersion": "2010-09-09",
         "Resources": {
-            "KABLAMOBUILDVPC": {
-                "Type": "Kablamo::Network::VPC",
+            "ELENDELBUILDVPC": {
+                "Type": "Elendel::Network::VPC",
                 "Properties": {
                     "Subnets": {
                         "ReservedMgmt1": {
