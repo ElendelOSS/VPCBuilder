@@ -26,24 +26,24 @@ make deployTransform
 Open `vpc.yaml` and replace the account number with your own so that the template knows which transform to apply:
 
 ```yaml
-Transform: "<ACCT_goes_here>::VPC"
+Transform: "<ACCT#_goes_here>::VPC"
 ```
 
 #### Virtual Private Gateway
 
-Ideally you should never spin up a VPGW in Cloudformation. If you ever plan to attach it to a Direct Connect Virtual Interface you wont be able to tear up & down the VPC without destorying the VIF attachment. Either by hand in the console (shudder) or ideally via the CLI/SDK call with the following
+Ideally you should never spin up a VPGW in Cloudformation. If you ever plan to attach it to a Direct Connect Virtual Interface you wont be able to tear up & down the VPC without destroying the VIF attachment. Either by hand in the console (shudder) or ideally via the CLI/SDK call with the following
 
 ```bash
 aws ec2 create-vpn-gateway --type ipsec.1 --amazon-side-asn <AWS BGP ASN>
 ```
 
-You can omit the AWS BGP ASN if you're not sure what you would like to make it and can happily utilise the standard ASN provided by AWS.
+You can omit the AWS BOP ASN if you're not sure what you would like to make it and can happily utilise the standard ASN provided by AWS.
 
 ```bash
 aws ec2 create-vpn-gateway --type ipsec.1
 ```
 
-**N.B the "VpnGatewayId" that is returned, you will need it in the final step**
+**Make a note of the "VpnGatewayId" that is returned, you will need it in the final step**
 
 #### Build the VPC
 
@@ -54,7 +54,7 @@ aws cloudformation deploy \
         --capabilities CAPABILITY_IAM \
         --template-file vpc.yaml \
         --stack-name 'VPC' \
-        --parameter-overrides VGW=vgw-05811955cb8607072
+        --parameter-overrides VGW=vgw-05811955cb8607072   # Replace with your VpnGatewayId
 ```
 
 ## To Do
@@ -66,7 +66,7 @@ Adding proper IPv6 regex and handling with NetworkACLs
 
 ## Basic Usage
 
-Utilise the yaml structure below as a template, changing the Account ID in the transformation definiton.
+Utilise the yaml structure below as a template, changing the Account ID in the transformation definition.
 It will support the removal of Subnets, RouteTables, NATGateways and NetworkACLs.
 
 ## Network ACL Breakdown
