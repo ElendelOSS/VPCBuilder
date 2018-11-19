@@ -307,4 +307,4 @@ Resources:
                     InternalSubnetAclEntryOutTCPDNSIPv6: "112,6,allow,true,::/0,53,53"
                     InternalSubnetAclEntryOutUDPDNSIPv6: "113,17,allow,true,::/0,53,53"
                     InternalSubnetAclEntryOutSSH: "150,6,allow,true,0.0.0.0/0,22,22"
-Transform: "073042351244::VPC"
+Transform: "VPC"
