@@ -26,12 +26,12 @@ Resources:
                 PerimeterInternal3: {CIDR: 172.16.8.0/24, AZ: 2, NetACL: InternalSubnetAcl, RouteTable: InternalRT3 }
             RouteTables:
                 PublicRT:
-                  - RouteName: PublicRoute
-                    RouteCIDR: 0.0.0.0/0
-                    RouteGW: InternetGateway
-                  - RouteName: PublicRouteIPv6
-                    RouteCIDR: ::/0
-                    RouteGW: InternetGateway
+                    - RouteName: PublicRoute
+                      RouteCIDR: 0.0.0.0/0
+                      RouteGW: InternetGateway
+                    - RouteName: PublicRouteIPv6
+                      RouteCIDR: ::/0
+                      RouteGW: InternetGateway
                 InternalRT1:
                 InternalRT2:
                 InternalRT3:
@@ -46,55 +46,55 @@ Resources:
                 VPCEndpoint:
                     GroupDescription: VPC Endpoint Interface Firewall Rules
                     SecurityGroupIngress:
-                    - [icmp,-1,-1,172.16.0.0/20, All ICMP Traffic]
-                    - [tcp,0,65535,172.16.0.0/20, All TCP Traffic]
-                    - [udp,0,65535,172.16.0.0/20, All UDP Traffic]
+                        - [icmp, -1, -1, 172.16.0.0/20, All ICMP Traffic]
+                        - [tcp, 0, 65535, 172.16.0.0/20, All TCP Traffic]
+                        - [udp, 0, 65535, 172.16.0.0/20, All UDP Traffic]
                     SecurityGroupEgress:
-                    - [icmp,-1,-1,172.16.0.0/20, All ICMP Traffic]
-                    - [tcp,0,65535,172.16.0.0/20, All TCP Traffic]
-                    - [udp,0,65535,172.16.0.0/20, All UDP Traffic]
+                        - [icmp, -1, -1, 172.16.0.0/20, All ICMP Traffic]
+                        - [tcp, 0, 65535, 172.16.0.0/20, All TCP Traffic]
+                        - [udp, 0, 65535, 172.16.0.0/20, All UDP Traffic]
                     Tags:
-                      Name: VPCEndpoint
+                        Name: VPCEndpoint
             Endpoints:
                 cloudformation:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 cloudtrail:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 codebuild:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 config:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 dynamodb:
                     Type: Gateway
                     RouteTableIds:
-                      - PublicRT
-                      - InternalRT1
-                      - InternalRT2
-                      - InternalRT3
+                        - PublicRT
+                        - InternalRT1
+                        - InternalRT2
+                        - InternalRT3
                     PolicyDocument: |
                         {
                             "Version":"2012-10-17",
@@ -110,98 +110,98 @@ Resources:
                 ec2:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 ec2messages:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 elasticloadbalancing:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 events:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 execute-api:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 kinesis-streams:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 kms:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 logs:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 monitoring:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 sagemaker.api:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 sagemaker.runtime:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 s3:
                     Type: Gateway
                     RouteTableIds:
-                      - PublicRT
-                      - InternalRT1
-                      - InternalRT2
-                      - InternalRT3
+                        - PublicRT
+                        - InternalRT1
+                        - InternalRT2
+                        - InternalRT3
                     PolicyDocument: |
                         {
                             "Version":"2012-10-17",
@@ -217,43 +217,43 @@ Resources:
                 secretsmanager:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 servicecatalog:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 sns:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 ssm:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
                 ssmmessages:
                     Type: Interface
                     SubnetIds:
-                      - ReservedMgmt1
-                      - ReservedMgmt2
-                      - ReservedMgmt3
+                        - ReservedMgmt1
+                        - ReservedMgmt2
+                        - ReservedMgmt3
                     SecurityGroupIds:
-                      - VPCEndpoint
+                        - VPCEndpoint
             NetworkACLs:
                 RestrictedSubnetAcl:
                     RestrictedSubnetAclEntryInTCPUnReserved: "90,6,allow,false,0.0.0.0/0,1024,65535"
