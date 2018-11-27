@@ -200,6 +200,33 @@ def handler(event, context):
                         }
                     }
 
+                    if "TransitGateways" in properties:
+                        for transitgw, objects in properties["TransitGateways"].iteritems():
+                            resources[transitgw+"TransitGWAttach"] = {
+                                "Type": "AWS::EC2::TransitGatewayAttachment",
+                                "Properties": {
+                                    "TransitGatewayId" : objects["TransitGatewayId"],
+                                    "VpcId": {
+                                        "Ref": properties["Details"]["VPCName"]
+                                    }
+                                }
+                            }
+                            resources[transitgw+"TransitGWAttach"]["Properties"]["SubnetIds"] = []
+                            for subnet in objects["Subnets"]:
+                                resources[transitgw+"TransitGWAttach"]["Properties"]["SubnetIds"].append(
+                                    { 
+                                        "Ref": subnet 
+                                    }
+                                )
+                            resources[transitgw+"TransitGWAttach"]["Properties"]["Tags"] = []
+                            for k, v in objects["Tags"].iteritems():
+                                resources[transitgw+"TransitGWAttach"]["Properties"]["Tags"].append(
+                                    {
+                                        "Key" : k,
+                                        "Value" : v
+                                    }
+                                )
+
                     if "RouteTables" in properties:
                         for routetable, objects in properties["RouteTables"].iteritems():
                             resources[routetable] = {

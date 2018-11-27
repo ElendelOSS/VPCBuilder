@@ -1,7 +1,7 @@
 {
-    "transformId": "012345678901::VPC",
+    "transformId": "801604450668::VPC",
     "templateParameterValues": {
-        "VGW": "vgw-012346789"
+        "VGW": "vgw-06bbcf429c1cb0eed"
     },
     "fragment": {
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -81,6 +81,32 @@
                             "AZ": 2,
                             "NetACL": "InternalSubnetAcl",
                             "RouteTable": "InternalRT3"
+                        }
+                    },
+                    "TransitGateways": {
+                        "Test1": {
+                            "Subnets": [
+                                "Internal1",
+                                "Internal2",
+                                "Internal3"
+                            ],
+                            "TransitGatewayId": "tgw-01234567890123456",
+                            "Tags": {
+                                "Name": "PRIVATE-EGRESS-VPC-TGW1",
+                                "Purpose": "Gateway Attach 1"
+                            }
+                        },
+                        "Test2": {
+                            "Subnets": [
+                                "Internal1",
+                                "Internal2",
+                                "Internal3"
+                            ],
+                            "TransitGatewayId": "tgw-98765432109876543",
+                            "Tags": {
+                                "Name": "PRIVATE-EGRESS-VPC-TGW2",
+                                "Purpose": "Gateway Attach 2"
+                            }
                         }
                     },
                     "Tags": {
@@ -185,7 +211,7 @@
                             "Tags": {
                                 "Name": "VPCEndpoint"
                             },
-                            "GroupDescription": "Squid Firewall Rules",
+                            "GroupDescription": "VPC Endpoint Interface Firewall Rules",
                             "SecurityGroupEgress": [
                                 [
                                     "icmp",
@@ -496,8 +522,8 @@
         },
         "Mappings": {}
     },
-    "region": "ap-southeast-2",
+    "region": "us-east-1",
     "params": {},
-    "requestId": "93a22f59-5fb0-41b3-aae0-e8407f953a72",
+    "requestId": "508122ef-6442-46eb-b2fc-5fab1f4f7064",
     "accountId": "012345678901"
 }

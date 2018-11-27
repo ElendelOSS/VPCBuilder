@@ -3,7 +3,7 @@ PROJECT = vpcbuilder
 VERSION = $(shell whoami)
 DIR = $(shell pwd)
 GITHASH = $(shell git rev-parse HEAD | cut -c 1-7)
-BUCKET_NAME = ap.southeast.2.lambda.functions.elendel.com.au
+BUCKET_NAME = region.lambda.functions.yourbucket
 CONTAINER = python:2.7.14-alpine3.6 
 WORKING_DIR = /opt/app
 
@@ -16,6 +16,6 @@ buildPackage:
 .PHONY: buildPackage
 
 uploadToS3: buildPackage
-	aws s3 cp ./$(PROJECT).zip s3://$(BUCKET_NAME)/$(PROJECT)/$(PROJECT)-$(GITHASH).zip --acl bucket-owner-full-control --profile yourprofile
+	aws s3 cp ./$(PROJECT).zip s3://$(BUCKET_NAME)/$(PROJECT)/$(PROJECT)-$(GITHASH).zip --acl bucket-owner-full-control
 	echo 'File version is $(PROJECT)-$(GITHASH).zip'
 .PHONY: uploadToS3

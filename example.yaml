@@ -12,6 +12,21 @@ Resources:
             Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
             Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}            
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
+            TransitGateways:
+              Test1:
+                TransitGatewayId: tgw-01234567890123456
+                Tags: {Name: PRIVATE-EGRESS-VPC-TGW1, Purpose: Gateway Attach 1}
+                Subnets:
+                  - Internal1
+                  - Internal2
+                  - Internal3
+              Test2:
+                TransitGatewayId: tgw-98765432109876543
+                Tags: {Name: PRIVATE-EGRESS-VPC-TGW2, Purpose: Gateway Attach 2}
+                Subnets:
+                  - Internal1
+                  - Internal2
+                  - Internal3
             Subnets:
                 ReservedMgmt1: {CIDR: 172.16.0.0/26, AZ: 0, NetACL: InternalSubnetAcl, RouteTable: InternalRT1 }
                 ReservedMgmt2: {CIDR: 172.16.1.0/26, AZ: 1, NetACL: InternalSubnetAcl, RouteTable: InternalRT2 }
