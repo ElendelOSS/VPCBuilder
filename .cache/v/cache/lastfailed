@@ -1,0 +1,3 @@
+{
+  "tests/test_functions.py::TestVPCBuilderFunctions::test_isIPV6Cidr_defaultroute": true
+}

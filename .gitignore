@@ -1,2 +1,5 @@
 kombustion.yaml
 *.zip
+*.pyc
+*~
+*.swp

@@ -1,0 +1,7 @@
+mock==1.0.1
+pytest==3.2.1
+pytest-cov==2.5.1
+hypothesis==3.27.1
+pycodestyle==2.2.0
+coverage==4.3.4
+pynt==0.8.1
