@@ -1,5 +1,7 @@
 # VPC Builder
 
+[![Build Status](https://travis-ci.org/ElendelOSS/VPCBuilder.svg?branch=master)](https://travis-ci.org/ElendelOSS/VPCBuilder)
+
 Builds out a "fully" featured VPC summarising the complexity associated with a VPC such as Internet & Customer Gateways, Subnets, Routetables and NATGateways.
 
 It also adds in VPC Flowlogs with an IAM role and supports full dynamic allocation of IPv6 with the VPC and to each subnet. 
