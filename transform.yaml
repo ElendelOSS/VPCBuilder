@@ -28,7 +28,7 @@ Resources:
       Code:
         S3Bucket: !Sub '${LambdaBucket}'
         S3Key: !Sub 'vpcbuilder/vpcbuilder-${LambdaVersion}.zip'
-      Handler: lambda.handler
+      Handler: macro.handler
       Runtime: python2.7
       Role: !GetAtt VPCTransformExecutionRole.Arn
   VPCTransformFunctionPermissions:
