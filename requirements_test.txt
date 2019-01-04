@@ -5,3 +5,4 @@ hypothesis==3.27.1
 pycodestyle==2.2.0
 coverage==4.3.4
 pynt==0.8.1
+yaml==3.13
