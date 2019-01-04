@@ -3,3 +3,7 @@ kombustion.yaml
 *.pyc
 *~
 *.swp
+.coverage
+tests/.coverage
+tests/__pycache__/*
+tests/.cache/*
