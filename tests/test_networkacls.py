@@ -24,7 +24,7 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
             Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             NetworkACLs:
-                RestrictedSubnetAcl: 
+                RestrictedSubnetAcl:
                     RestrictedSubnetAclEntryInTCPUnReserved: '90,6,allow,false,0.0.0.0/0,1024,65535'
                     RestrictedSubnetAclEntryInUDPUnReserved: '91,17,allow,false,0.0.0.0/0,1024,65535'
                     RestrictedSubnetAclEntryInTCPUnReservedIPv6: '92,6,allow,false,::/0,1024,65535'
