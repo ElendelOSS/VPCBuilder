@@ -6,16 +6,16 @@ import src.macro
 from mock import MagicMock
 
 
-class TestVPCBuilderRouteTablesSetup(unittest.TestCase):
+class TestVPCBuilderVPCEndpointSetup(unittest.TestCase):
     identifier = 'TEST'
 
     def setUp(self):
         self.maxDiff = None
 
 
-class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
+class TestVPCBuilderVPCEndpoint(TestVPCBuilderVPCEndpointSetup):
 
-    def test_base_natgw_object(self):
+    def test_base_vpcendpoint_object(self):
         resources = {}
         outputs = {}
         properties = yaml.load("""\

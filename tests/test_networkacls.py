@@ -15,7 +15,7 @@ class TestVPCBuilderNetworkACLSetup(unittest.TestCase):
 
 class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
 
-    def test_base_natgw_object(self):
+    def test_base_networkacl_object(self):
         resources = {}
         outputs = {}
         properties = yaml.load("""\

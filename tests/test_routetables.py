@@ -15,7 +15,7 @@ class TestVPCBuilderRouteTablesSetup(unittest.TestCase):
 
 class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
 
-    def test_base_natgw_object(self):
+    def test_base_routetable_object(self):
         resources = {}
         outputs = {}
         properties = yaml.load("""\

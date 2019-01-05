@@ -1,6 +1,6 @@
 # VPC Builder
 
-[![Build Status](https://travis-ci.org/ElendelOSS/VPCBuilder.svg?branch=master)](https://travis-ci.org/ElendelOSS/VPCBuilder)
+[![Build Status](https://travis-ci.org/ElendelOSS/VPCBuilder.svg?branch=master)](https://travis-ci.org/ElendelOSS/VPCBuilder) [![Coverage Status](https://coveralls.io/repos/github/ElendelOSS/VPCBuilder/badge.svg?branch=master)](https://coveralls.io/github/ElendelOSS/VPCBuilder?branch=master)
 
 Builds out a "fully" featured VPC summarising the complexity associated with a VPC such as Internet & Customer Gateways, Subnets, Routetables and NATGateways.
 
