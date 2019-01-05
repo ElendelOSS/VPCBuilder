@@ -169,5 +169,4 @@ class TestVPCBuilderNATGateway(TestVPCBuilderNATGatewaySetup):
             }
         }
         actual, outputs = src.macro.buildNATGateways(properties, resources, outputs)
-        print(actual)
         self.assertEquals(expected, actual)
