@@ -15,6 +15,244 @@ def isIPv6Route(cidr):
     else:
         return "DestinationCidrBlock"
 
+def buildTransitGateways(properties, resources):
+    for transitgw, objects in properties["TransitGateways"].iteritems():
+        resources[transitgw + "TransitGWAttach"] = {
+            "Type": "AWS::EC2::TransitGatewayAttachment",
+            "Properties": {
+                "TransitGatewayId": objects["TransitGatewayId"],
+                "VpcId": {
+                    "Ref": properties["Details"]["VPCName"]
+                }
+            }
+        }
+
+        resources[transitgw + "TransitGWAttach"]["Properties"]["SubnetIds"] = []
+        for subnet in objects["Subnets"]:
+            resources[transitgw + "TransitGWAttach"]["Properties"]["SubnetIds"].append(
+                {
+                    "Ref": subnet
+                }
+            )
+        resources[transitgw + "TransitGWAttach"]["Properties"]["Tags"] = []
+        for k, v in objects["Tags"].iteritems():
+            resources[transitgw + "TransitGWAttach"]["Properties"]["Tags"].append(
+                {
+                    "Key": k,
+                    "Value": v
+                }
+            )
+    
+    return resources
+
+def buildRouteTables(properties, resources, outputs):
+    for routetable, objects in properties["RouteTables"].iteritems():
+        resources[routetable] = {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": routetable
+                    }
+                ],
+                "VpcId": {
+                    "Ref": properties["Details"]["VPCName"]
+                }
+            }
+        }
+
+        outputs[routetable] = {
+            "Description": routetable,
+            "Value": {
+                "Ref": routetable
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": "${AWS::StackName}-RouteTable-" + routetable
+                }
+            }
+        }
+
+        resources[routetable + "RoutePropagation"] = {
+            "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+            "Properties": {
+                "RouteTableIds": [
+                    {
+                        "Ref": routetable
+                    }
+                ],
+                "VpnGatewayId": {
+                    "Ref": "VGW"
+                }
+            },
+            "DependsOn": [
+                "VPCGatewayAttachment"
+            ]
+        }
+        if objects is not None:
+            for route in objects:
+                resources[route["RouteName"]] = {
+                    "Type": "AWS::EC2::Route",
+                    "Properties": {
+                        isIPv6Route(route["RouteCIDR"]): route["RouteCIDR"],
+                        "GatewayId": {
+                            "Ref": route["RouteGW"]
+                        },
+                        "RouteTableId": {
+                            "Ref": routetable
+                        }
+                    }
+                }
+    
+    return resources, outputs
+
+def buildSubnets(properties, resources, outputs):
+    subnet_count = 0
+    for subnet, objects in properties["Subnets"].iteritems():
+        resources[subnet] = {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        objects["AZ"],
+                        {
+                            "Fn::GetAZs": ""
+                        }
+                    ]
+                },
+                "CidrBlock": objects["CIDR"],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": subnet
+                    }
+                ],
+                "VpcId": {
+                    "Ref": properties["Details"]["VPCName"]
+                }
+            }
+        }
+
+        outputs[subnet] = {
+            "Description": subnet,
+            "Value": {
+                "Ref": subnet
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": "${AWS::StackName}-Subnet-" + subnet
+                }
+            }
+        }
+
+        resources[subnet + "SubnetRoutetableAssociation"] = {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": objects["RouteTable"]
+                },
+                "SubnetId": {
+                    "Ref": subnet
+                }
+            }
+        }
+
+        resources[subnet + "SubnetNetworkACLAssociation"] = {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": objects["NetACL"]
+                },
+                "SubnetId": {
+                    "Ref": subnet
+                }
+            }
+        }
+        subnet_count = subnet_count + 1
+    if "IPv6" in properties["Details"]:
+        subnet_itr = 0
+        for subnet, objects in properties["Subnets"].iteritems():
+            if properties["Details"]["IPv6"]:
+                resources[subnet]["DependsOn"] = "IPv6Block"
+                resources[subnet]["Properties"]["AssignIpv6AddressOnCreation"] = True
+                resources[subnet]["Properties"]["Ipv6CidrBlock"] = {
+                    "Fn::Select": [
+                        subnet_itr,
+                        {
+                            "Fn::Cidr": [
+                                {
+                                    "Fn::Select": [
+                                        0,
+                                        {
+                                            "Fn::GetAtt": [
+                                                properties["Details"]["VPCName"],
+                                                "Ipv6CidrBlocks"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                subnet_count,
+                                64
+                            ]
+                        }
+                    ]
+                }
+                subnet_itr = subnet_itr + 1
+    
+    return resources, outputs
+
+def buildNetworlACLs(properties, resources, outputs):
+    for networkacl, objects in properties["NetworkACLs"].iteritems():
+        resources[networkacl] = {
+            "Type": "AWS::EC2::NetworkAcl",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": networkacl
+                    }
+                ],
+                "VpcId": {
+                    "Ref": properties["Details"]["VPCName"]
+                }
+            }
+        }
+
+        outputs[networkacl] = {
+            "Description": networkacl,
+            "Value": {
+                "Ref": networkacl
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": "${AWS::StackName}-NACL-" + networkacl
+                }
+            }
+        }
+
+        for entry, rule in objects.items():
+            splitset = rule.split(',')
+            resources[entry] = {
+                "Type": "AWS::EC2::NetworkAclEntry",
+                "Properties": {
+                    isIPv6NetACL(splitset[4]): splitset[4],
+                    "Egress": splitset[3],
+                    "NetworkAclId": {
+                        "Ref": networkacl
+                    },
+                    "PortRange": {
+                        "From": splitset[5],
+                        "To": splitset[6]
+                    },
+                    "Protocol": splitset[1],
+                    "RuleAction": splitset[2],
+                    "RuleNumber": splitset[0]
+                }
+            }
+    
+    return resources, outputs
+
 
 def handler(event, context):
 
@@ -202,7 +440,8 @@ def handler(event, context):
                     }
 
                     if "TransitGateways" in properties:
-                        for transitgw, objects in properties["TransitGateways"].iteritems():
+                        resources = buildTransitGateways(properties, resources)
+                        """ for transitgw, objects in properties["TransitGateways"].iteritems():
                             resources[transitgw + "TransitGWAttach"] = {
                                 "Type": "AWS::EC2::TransitGatewayAttachment",
                                 "Properties": {
@@ -227,10 +466,11 @@ def handler(event, context):
                                         "Key": k,
                                         "Value": v
                                     }
-                                )
+                                ) """
 
                     if "RouteTables" in properties:
-                        for routetable, objects in properties["RouteTables"].iteritems():
+                        resources, outputs = buildRouteTables(properties, resources, outputs)
+                        """ for routetable, objects in properties["RouteTables"].iteritems():
                             resources[routetable] = {
                                 "Type": "AWS::EC2::RouteTable",
                                 "Properties": {
@@ -287,10 +527,11 @@ def handler(event, context):
                                                 "Ref": routetable
                                             }
                                         }
-                                    }
+                                    } """
 
                     if "Subnets" in properties:
-                        subnet_count = 0
+                        resources, outputs = buildSubnets(properties, resources, outputs)
+                        """ subnet_count = 0
                         for subnet, objects in properties["Subnets"].iteritems():
                             resources[subnet] = {
                                 "Type": "AWS::EC2::Subnet",
@@ -380,10 +621,11 @@ def handler(event, context):
                                             }
                                         ]
                                     }
-                                    subnet_itr = subnet_itr + 1
+                                    subnet_itr = subnet_itr + 1 """
 
                     if "NetworkACLs" in properties:
-                        for networkacl, objects in properties["NetworkACLs"].iteritems():
+                        resources, outputs = buildNetworlACLs(properties, resources, outputs)
+                        """ for networkacl, objects in properties["NetworkACLs"].iteritems():
                             resources[networkacl] = {
                                 "Type": "AWS::EC2::NetworkAcl",
                                 "Properties": {
@@ -429,7 +671,7 @@ def handler(event, context):
                                         "RuleAction": splitset[2],
                                         "RuleNumber": splitset[0]
                                     }
-                                }
+                                } """
 
                     if "NATGateways" in properties:
                         for natgw, objects in properties["NATGateways"].iteritems():
