@@ -1,9 +1,13 @@
 kombustion.yaml
 *.zip
 *.pyc
+*/*.pyc
 *~
 *.swp
 .coverage
+coverage*
 tests/.coverage
 tests/__pycache__/*
 tests/.cache/*
+.vscode/*
+.DS_Store
