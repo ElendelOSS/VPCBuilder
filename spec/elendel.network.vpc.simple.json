@@ -1,0 +1,43 @@
+{
+    "ResourceTypes": {
+        "Elendel::Network::VPC": {
+            "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-kms-key.html",
+            "Properties": {
+                "CIDR": {
+                    "Required": true
+                },
+                "Details": {
+                    "Required": true
+                },
+                "Tags": {
+                    "Required": false
+                },
+                "DHCP": {
+                    "Required": true
+                },
+                "TransitGateways": {
+                    "Required": true
+                },
+                "Subnets": {
+                    "Required": true
+                },
+                "RouteTables": {
+                    "Required": true
+                },
+                "NATGateways": {
+                    "Required": true
+                },
+                "SecurityGroups": {
+                    "Required": true
+                },
+                "Endpoints": {
+                    "Required": true
+                },
+                "NetworkACLs": {
+                    "Required": true
+                }
+            }
+        }
+    },
+    "ResourceSpecificationVersion": "0.0.1"
+}
