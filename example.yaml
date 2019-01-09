@@ -4,12 +4,15 @@ Parameters:
   VGW: {Description: VPC Gateway, Type: String, Default: vgw-012345678}
 Mappings: {}
 Resources:
-
     ELENDELVPC:
         Type: Elendel::Network::VPC
         Properties:
             CIDR: 172.16.0.0/20
-            Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: true}
+            Details: 
+              VPCName: PRIVATEEGRESSVPC
+              VPCDesc: Private Egress VPC
+              Region: ap-southeast-2
+              IPv6: True
             Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}            
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             TransitGateways:
@@ -52,12 +55,9 @@ Resources:
                 InternalRT2: {}
                 InternalRT3: {}
             NATGateways:
-                NATGW1:
-                    {Subnet: ReservedNet1, Routetable: InternalRT1}
-                NATGW2:
-                    {Subnet: ReservedNet2, Routetable: InternalRT2}
-                NATGW3:
-                    {Subnet: ReservedNet3, Routetable: InternalRT3}
+                NATGW1: {Subnet: ReservedNet1, Routetable: InternalRT1}
+                NATGW2: {Subnet: ReservedNet2, Routetable: InternalRT2}
+                NATGW3: {Subnet: ReservedNet3, Routetable: InternalRT3}
             SecurityGroups:
                 VPCEndpoint:
                     GroupDescription: VPC Endpoint Interface Firewall Rules

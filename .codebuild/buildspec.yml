@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - pip install -r requirements_test.txt
+    finally:
+      - command
+      - command
+  pre_build:
+    commands:
+      - pytest --cov=src
+      - pycodestyle --ignore=E501 .
+    finally:
+      - coveralls
