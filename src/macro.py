@@ -16,6 +16,13 @@ def isIPv6Route(cidr):
         return "DestinationCidrBlock"
 
 
+def str2bool(v):
+    if v.lower() in ("yes", "true", "t", "1"):
+        return True
+    else:
+        return False
+
+
 def buildTransitGateways(properties, resources, outputs):
     for transitgw, objects in properties["TransitGateways"].iteritems():
         resources[transitgw + "TransitGWAttach"] = {
@@ -241,17 +248,17 @@ def buildNetworlACLs(properties, resources, outputs):
                 "Type": "AWS::EC2::NetworkAclEntry",
                 "Properties": {
                     isIPv6NetACL(splitset[4]): splitset[4],
-                    "Egress": splitset[3],
+                    "Egress": str2bool(splitset[3]),
                     "NetworkAclId": {
                         "Ref": networkacl
                     },
                     "PortRange": {
-                        "From": splitset[5],
-                        "To": splitset[6]
+                        "From": int(splitset[5]),
+                        "To": int(splitset[6])
                     },
-                    "Protocol": splitset[1],
+                    "Protocol": int(splitset[1]),
                     "RuleAction": splitset[2],
-                    "RuleNumber": splitset[0]
+                    "RuleNumber": int(splitset[0])
                 }
             }
 
@@ -428,8 +435,8 @@ def buildBaseline(properties, resources, outputs):
         "Type": "AWS::EC2::VPC",
         "Properties": {
             "CidrBlock": properties["CIDR"],
-            "EnableDnsHostnames": "true",
-            "EnableDnsSupport": "true",
+            "EnableDnsHostnames": True,
+            "EnableDnsSupport": True,
             "InstanceTenancy": "default",
             "Tags": [
                 {
@@ -460,7 +467,7 @@ def buildBaseline(properties, resources, outputs):
                     "VpcId": {
                         "Ref": properties["Details"]["VPCName"]
                     },
-                    "AmazonProvidedIpv6CidrBlock": "true"
+                    "AmazonProvidedIpv6CidrBlock": True
                 }
             }
 
