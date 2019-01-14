@@ -48,13 +48,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '90',
-                    'Protocol': '6',
+                    'RuleNumber': 90,
+                    'Protocol': 6,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     },
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'CidrBlock': '0.0.0.0/0'
                 }
@@ -65,13 +65,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '91',
-                    'Protocol': '17',
+                    'RuleNumber': 91,
+                    'Protocol': 17,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     },
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'CidrBlock': '0.0.0.0/0'
                 }
@@ -82,13 +82,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'InternalSubnetAcl'
                     },
-                    'RuleNumber': '103',
-                    'Protocol': '17',
+                    'RuleNumber': 103,
+                    'Protocol': 17,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     },
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'CidrBlock': '0.0.0.0/0'
                 }
@@ -111,13 +111,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '90',
-                    'Protocol': '6',
+                    'RuleNumber': 90,
+                    'Protocol': 6,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     },
-                    'Egress': 'true',
+                    'Egress': True,
                     'RuleAction': 'allow',
                     'CidrBlock': '0.0.0.0/0'
                 }
@@ -140,14 +140,14 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '92',
-                    'Protocol': '6',
+                    'RuleNumber': 92,
+                    'Protocol': 6,
                     'Ipv6CidrBlock': '::/0',
-                    'Egress': 'true',
+                    'Egress': True,
                     'RuleAction': 'allow',
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     }
                 }
             },
@@ -157,13 +157,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '91',
-                    'Protocol': '17',
+                    'RuleNumber': 91,
+                    'Protocol': 17,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     },
-                    'Egress': 'true',
+                    'Egress': True,
                     'RuleAction': 'allow',
                     'CidrBlock': '0.0.0.0/0'
                 }
@@ -174,14 +174,14 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '93',
-                    'Protocol': '17',
+                    'RuleNumber': 93,
+                    'Protocol': 17,
                     'Ipv6CidrBlock': '::/0',
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     }
                 }
             },
@@ -191,14 +191,14 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'InternalSubnetAcl'
                     },
-                    'RuleNumber': '104',
-                    'Protocol': '6',
+                    'RuleNumber': 104,
+                    'Protocol': 6,
                     'Ipv6CidrBlock': '::/0',
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     }
                 }
             },
@@ -208,14 +208,14 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '92',
-                    'Protocol': '6',
+                    'RuleNumber': 92,
+                    'Protocol': 6,
                     'Ipv6CidrBlock': '::/0',
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     }
                 }
             },
@@ -225,14 +225,14 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'InternalSubnetAcl'
                     },
-                    'RuleNumber': '105',
-                    'Protocol': '17',
+                    'RuleNumber': 105,
+                    'Protocol': 17,
                     'Ipv6CidrBlock': '::/0',
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     }
                 }
             },
@@ -242,14 +242,14 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'RestrictedSubnetAcl'
                     },
-                    'RuleNumber': '93',
-                    'Protocol': '17',
+                    'RuleNumber': 93,
+                    'Protocol': 17,
                     'Ipv6CidrBlock': '::/0',
-                    'Egress': 'true',
+                    'Egress': True,
                     'RuleAction': 'allow',
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     }
                 }
             },
@@ -259,13 +259,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'InternalSubnetAcl'
                     },
-                    'RuleNumber': '100',
-                    'Protocol': '-1',
+                    'RuleNumber': 100,
+                    'Protocol': -1,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1'
+                        'To': 65535,
+                        'From': 1
                     },
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'CidrBlock': '172.16.0.0/16'
                 }
@@ -276,13 +276,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'InternalSubnetAcl'
                     },
-                    'RuleNumber': '102',
-                    'Protocol': '6',
+                    'RuleNumber': 102,
+                    'Protocol': 6,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1024'
+                        'To': 65535,
+                        'From': 1024
                     },
-                    'Egress': 'false',
+                    'Egress': False,
                     'RuleAction': 'allow',
                     'CidrBlock': '0.0.0.0/0'
                 }
@@ -293,13 +293,13 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'NetworkAclId': {
                         'Ref': 'InternalSubnetAcl'
                     },
-                    'RuleNumber': '100',
-                    'Protocol': '-1',
+                    'RuleNumber': 100,
+                    'Protocol': -1,
                     'PortRange': {
-                        'To': '65535',
-                        'From': '1'
+                        'To': 65535,
+                        'From': 1
                     },
-                    'Egress': 'true',
+                    'Egress': True,
                     'RuleAction': 'allow',
                     'CidrBlock': '172.16.0.0/16'
                 }

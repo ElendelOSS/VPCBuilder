@@ -1,0 +1,9 @@
+override_spec: spec/elendel.network.vpc.wip.json
+templates:
+- example.yaml
+regions:
+- ap-southeast-2
+include_checks:
+- I
+ignore_checks:
+- W2001

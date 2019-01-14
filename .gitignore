@@ -1,8 +1,10 @@
 kombustion.yaml
 *.zip
-*.pyc
-*/*.pyc
+*.__pycache__
+__pycache__
+.cache
 *~
+*.pyc
 *.swp
 .coverage
 coverage*

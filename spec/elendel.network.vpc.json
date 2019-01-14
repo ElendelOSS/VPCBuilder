@@ -1,0 +1,258 @@
+{
+    "PropertyTypes": {
+        "AWS::Network::VPC.VPCBuilderDetails": {
+            "VPCName": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "VPCDesc": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Mutable"
+            },
+            "Region": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "IPv6": {
+                "PrimitiveType": "Boolean",
+                "Required": false,
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderDHCP": {
+            "Name": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "DNSServers": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "NTPServers": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "NTBType": {
+                "PrimitiveType": "Boolean",
+                "Required": false,
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderTransitGateways": {
+            "TransitGatwayId": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "Subnets": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "Tags": {
+                "PrimitiveItemType": "String",
+                "Required": false,
+                "Type": "Map",
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderSubnets": {
+            "CIDR": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "AZ": {
+                "PrimitiveType": "Integer",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "NetACL": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "RouteTable": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderRouteTables": {
+            "RouteName": {
+                "ItemType": "List",
+                "Required": false,
+                "Type": "VPCBuilderRoute",
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderRoute": {
+            "RouteName": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "RouteCIDR": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "RouteGW": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderNATGateways": {
+            "Subnet": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "Routetable": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderSecurityGroups": {
+            "GroupDescription": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "SecurityGroupIngress": {
+                "PrimitiveType": "List",
+                "ItemType": "Rule",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "SecurityGroupEgress": {
+                "PrimitiveType": "List",
+                "ItemType": "Rule",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "Tags": {
+                "PrimitiveItemType": "String",
+                "Required": false,
+                "Type": "Map",
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderSecurityGroups.Rule": {
+            "GroupDescription": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            }
+        },
+        "AWS::Network::VPC.VPCBuilderEndpoints": {
+            "Type": {
+                "PrimitiveType": "String",
+                "Required": true,
+                "UpdateType": "Immutable"
+            },
+            "SubnetIds": {
+                "PrimitiveType": "List",
+                "ItemType": "String",
+                "Required": false,
+                "UpdateType": "Immutable"
+            },
+            "SecurityGroupIds": {
+                "PrimitiveType": "List",
+                "ItemType": "String",
+                "Required": false,
+                "UpdateType": "Immutable"
+            },
+            "RouteTableIds": {
+                "PrimitiveType": "List",
+                "ItemType": "String",
+                "Required": false,
+                "UpdateType": "Immutable"
+            },
+            "PolicyDocument": {
+                "PrimitiveType": "Json",
+                "Required": false,
+                "UpdateType": "Immutable"
+            }
+        }
+    },
+    "ResourceTypes": {
+        "AWS::Network::VPC": {
+            "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-kms-key.html",
+            "Properties": {
+                "CIDR": {
+                    "Type": "String",
+                    "Required": true,
+                    "UpdateType": "Immutable"
+                },
+                "Details": {
+                    "Type": "VPCBuilderDetails",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "Tags": {
+                    "PrimitiveItemType": "String",
+                    "Required": false,
+                    "Type": "Map",
+                    "UpdateType": "Immutable"
+                },
+                "DHCP": {
+                    "Type": "VPCBuilderDHCP",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "TransitGareways": {
+                    "PrimitiveItemType": "Map",
+                    "Type": "VPCBuilderTransitGateways",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "Subnets": {
+                    "PrimitiveItemType": "Map",
+                    "Type": "VPCBuilderSubnets",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "RouteTables": {
+                    "PrimitiveItemType": "Map",
+                    "Type": "VPCBuilderRouteTables",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "NATGateways": {
+                    "PrimitiveItemType": "Map",
+                    "Type": "VPCBuilderNATGateways",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "SecurityGroups": {
+                    "PrimitiveItemType": "Map",
+                    "Type": "VPCBuilderSecurityGroups",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "Endpoints": {
+                    "PrimitiveItemType": "Map",
+                    "Type": "VPCBuilderEndpoints",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                },
+                "NetworkACLs": {
+                    "PrimitiveItemType": "Map",
+                    "ItemType": "Map",
+                    "Required": true,
+                    "UpdateType": "Mutable"
+                }
+            }
+        }
+    },
+    "ResourceSpecificationVersion": "0.0.1"
+}

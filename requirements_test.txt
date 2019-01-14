@@ -7,3 +7,5 @@ coverage==4.3.4
 pynt==0.8.1
 pyyaml>=4.2b1
 coveralls==1.5.1
+awscli>=1.16.85
+cfn-lint>=0.11.1

@@ -1,0 +1,232 @@
+{
+    "PropertyTypes": {
+        "Elendel::Network::VPC.Details": {
+            "Properties": {
+                "VPCName": {
+                    "Required": true,
+                    "PrimitiveType": "String"
+                },
+                "VPCDesc": {
+                    "Required": true,
+                    "PrimitiveType": "String"
+                },
+                "Region": {
+                    "Required": true,
+                    "PrimitiveType": "String"
+                },
+                "IPv6": {
+                    "Required": false,
+                    "PrimitiveType": "Boolean"
+                }
+            }
+        },
+        "Elendel::Network::VPC.DHCP": {
+            "Properties": {
+                "Name": {
+                    "Required": true
+                },
+                "DNSServers": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "NTPServers": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "NTBType": {
+                    "PrimitiveType": "Integer",
+                    "Required": false
+                }
+            }
+        },
+        "Elendel::Network::VPC.TransitGateways": {
+            "Properties": {
+                "TransitGatwayId": {
+                    "Required": true
+                },
+                "Subnets": {
+                    "Required": true
+                },
+                "Tags": {
+                    "PrimitiveItemType": "String",
+                    "Required": false,
+                    "Type": "Map"
+                }
+            }
+        },
+        "Elendel::Network::VPC.Subnets": {
+            "Properties": {
+                "CIDR": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "AZ": {
+                    "PrimitiveType": "Integer",
+                    "Required": true
+                },
+                "NetACL": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "RouteTable": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                }
+            }
+        },
+        "Elendel::Network::VPC.RouteTables": {
+            "Properties": {
+                "RouteName": {
+                    "ItemType": "List",
+                    "Required": false,
+                    "Type": "Route"
+                }
+            }
+        },
+        "Elendel::Network::VPC.Route": {
+            "Properties": {
+                "RouteName": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "RouteCIDR": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "RouteGW": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                }
+            }
+        },
+        "Elendel::Network::VPC.NATGateways": {
+            "Properties": {
+                "Subnet": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "Routetable": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                }
+            }
+        },
+        "Elendel::Network::VPC.SecurityGroups": {
+            "Properties": {
+                "GroupDescription": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "SecurityGroupIngress": {
+                    "PrimitiveType": "List",
+                    "ItemType": "Rule",
+                    "Required": true
+                },
+                "SecurityGroupEgress": {
+                    "PrimitiveType": "List",
+                    "ItemType": "Rule",
+                    "Required": true
+                },
+                "Tags": {
+                    "PrimitiveItemType": "String",
+                    "Required": false,
+                    "Type": "Map"
+                }
+            }
+        },
+        "Elendel::Network::VPC.SecurityGroups.Rule": {
+            "Properties": {
+                "GroupDescription": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                }
+            }
+        },
+        "Elendel::Network::VPC.Endpoints": {
+            "Properties": {
+                "Type": {
+                    "PrimitiveType": "String",
+                    "Required": true
+                },
+                "SubnetIds": {
+                    "PrimitiveType": "List",
+                    "ItemType": "String",
+                    "Required": false
+                },
+                "SecurityGroupIds": {
+                    "PrimitiveType": "List",
+                    "ItemType": "String",
+                    "Required": false
+                },
+                "RouteTableIds": {
+                    "PrimitiveType": "List",
+                    "ItemType": "String",
+                    "Required": false
+                },
+                "PolicyDocument": {
+                    "PrimitiveType": "Json",
+                    "Required": false
+                }
+            }
+        }
+    },
+    "ResourceTypes": {
+        "Elendel::Network::VPC": {
+            "Properties": {
+                "CIDR": {
+                    "PrimitiveItemType": "String",
+                    "Required": true
+                },
+                "Details": {
+                    "Required": true,
+                    "Type": "Details"
+                },
+                "Tags": {
+                    "PrimitiveItemType": "String",
+                    "Required": false,
+                    "Type": "Map"
+                },
+                "DHCP": {
+                    "Required": true,
+                    "Type": "DHCP"
+                },
+                "TransitGateways": {
+                    "Required": true,
+                    "Type": "Map",
+                    "ItemType": "TransitGateways"
+                },
+                "Subnets": {
+                    "Required": true,
+                    "Type": "Map",
+                    "ItemType": "Subnets"
+                },
+                "RouteTables": {
+                    "Required": true,
+                    "Type": "Map",
+                    "ItemType": "RouteTables"
+                },
+                "NATGateways": {
+                    "Required": true,
+                    "Type": "Map",
+                    "ItemType": "NATGateways"
+                },
+                "SecurityGroups": {
+                    "Required": true,
+                    "Type": "Map",
+                    "ItemType": "SecurityGroups"
+                },
+                "Endpoints": {
+                    "Required": true,
+                    "Type": "Map",
+                    "ItemType": "Endpoints"
+                },
+                "NetworkACLs": {
+                    "Required": true,
+                    "Type": "Map",
+                    "PrimitiveItemType": "String"
+                }
+            }
+        }
+    },
+    "ResourceSpecificationVersion": "0.0.1"
+}

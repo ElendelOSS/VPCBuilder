@@ -4,29 +4,32 @@ Parameters:
   VGW: {Description: VPC Gateway, Type: String, Default: vgw-012345678}
 Mappings: {}
 Resources:
-
-    KABLAMOBUILDVPC:
-        Type: Kablamo::Network::VPC
+    ELENDELVPC:
+        Type: Elendel::Network::VPC
         Properties:
             CIDR: 172.16.0.0/20
-            Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
+            Details: 
+              VPCName: PRIVATEEGRESSVPC
+              VPCDesc: Private Egress VPC
+              Region: ap-southeast-2
+              IPv6: True
             Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}            
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             TransitGateways:
-              Test1:
-                TransitGatewayId: tgw-01234567890123456
-                Tags: {Name: PRIVATE-EGRESS-VPC-TGW1, Purpose: Gateway Attach 1}
-                Subnets:
-                  - Internal1
-                  - Internal2
-                  - Internal3
-              Test2:
-                TransitGatewayId: tgw-98765432109876543
-                Tags: {Name: PRIVATE-EGRESS-VPC-TGW2, Purpose: Gateway Attach 2}
-                Subnets:
-                  - Internal1
-                  - Internal2
-                  - Internal3
+                Test1:
+                    TransitGatewayId: tgw-01234567890123456
+                    Tags: {Name: PRIVATE-EGRESS-VPC-TGW1, Purpose: Gateway Attach 1}
+                    Subnets:
+                    - Internal1
+                    - Internal2
+                    - Internal3
+                Test2:
+                    TransitGatewayId: tgw-98765432109876543
+                    Tags: {Name: PRIVATE-EGRESS-VPC-TGW2, Purpose: Gateway Attach 2}
+                    Subnets:
+                    - Internal1
+                    - Internal2
+                    - Internal3
             Subnets:
                 ReservedMgmt1: {CIDR: 172.16.0.0/26, AZ: 0, NetACL: InternalSubnetAcl, RouteTable: InternalRT1 }
                 ReservedMgmt2: {CIDR: 172.16.1.0/26, AZ: 1, NetACL: InternalSubnetAcl, RouteTable: InternalRT2 }
@@ -42,22 +45,19 @@ Resources:
                 PerimeterInternal3: {CIDR: 172.16.8.0/24, AZ: 2, NetACL: InternalSubnetAcl, RouteTable: InternalRT3 }
             RouteTables:
                 PublicRT:
-                  - RouteName: PublicRoute
-                    RouteCIDR: 0.0.0.0/0
-                    RouteGW: InternetGateway
-                  - RouteName: PublicRouteIPv6
-                    RouteCIDR: ::/0
-                    RouteGW: InternetGateway
-                InternalRT1:
-                InternalRT2:
-                InternalRT3:
+                - RouteName: PublicRoute
+                  RouteCIDR: 0.0.0.0/0
+                  RouteGW: InternetGateway
+                - RouteName: PublicRouteIPv6
+                  RouteCIDR: "::/0"
+                  RouteGW: InternetGateway
+                InternalRT1: {}
+                InternalRT2: {}
+                InternalRT3: {}
             NATGateways:
-                NATGW1:
-                    {Subnet: ReservedNet1, Routetable: InternalRT1}
-                NATGW2:
-                    {Subnet: ReservedNet2, Routetable: InternalRT2}
-                NATGW3:
-                    {Subnet: ReservedNet3, Routetable: InternalRT3}
+                NATGW1: {Subnet: ReservedNet1, Routetable: InternalRT1}
+                NATGW2: {Subnet: ReservedNet2, Routetable: InternalRT2}
+                NATGW3: {Subnet: ReservedNet3, Routetable: InternalRT3}
             SecurityGroups:
                 VPCEndpoint:
                     GroupDescription: VPC Endpoint Interface Firewall Rules
