@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:
+  ProjectId:
+    Type: String
+    Default: VPCBuilder
+  TransformName:
+    Type: String
+    Default: VPC
+Resources:
+  TransformExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+            - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 
+                - 'logs:*'
+                Resource: 'arn:aws:logs:*:*:*'
+  TransformFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectId}"
+      Handler: macro.handler
+      Timeout: 900
+      CodeUri: ./src
+      Runtime: python3.6
+      Role: !GetAtt TransformExecutionRole.Arn
+  TransformFunctionPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt TransformFunction.Arn
+      Principal: 'cloudformation.amazonaws.com'
+  Transform:
+    Type: AWS::CloudFormation::Transform
+    Properties:
+      Name: !Sub '${AWS::AccountId}::VPC'
+      Description: Transform Definition
+      RoutingTable:
+        '*': 0_1
+      Versions:
+        - VersionName: 0_1
+          Description: Version 0_1 of the transform
+          FunctionName: !GetAtt TransformFunction.Arn
+      ExecutionPolicy:
+        Version: 2012-10-17
+        Id: AllowOtherAccountPolicy
+        Statement:
+          - Sid: AllowExecution
+            Effect: Allow
+            Principal: '*'
+            Action: 'cloudformation:CreateChangeSet'
+            Resource: !Sub 'arn:*:cloudformation:${AWS::Region}:${AWS::AccountId}:transform/${TransformName}'

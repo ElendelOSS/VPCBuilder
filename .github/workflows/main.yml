@@ -30,11 +30,6 @@ jobs:
     - name: Lint with pycodestyle
       run: |
         pycodestyle --ignore=E501 .
-    - name: AWS SAM CLI
-      run: |
-        pip install --user aws-sam-cli
-        USER_BASE_PATH=$(python -m site --user-base)
-        export PATH=$PATH:$USER_BASE_PATH/bin
     - name: Build SAM Package
       uses: chriscoffee/sam-github-actions@master
       env:
@@ -43,7 +38,7 @@ jobs:
         AWS_DEFAULT_REGION: ap-southeast-2
         S3_BUCKET: ''
       with:
-        args: build -t transform.yaml -m ./requirements.txt -b ./build -s .
+        args: build -t .sam/transform.yaml -m ./requirements.txt -b ./build -s .
     - name: ZIP SAM Package
       working-directory: ./build
       run: |
