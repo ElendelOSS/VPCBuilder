@@ -1,0 +1,64 @@
+name: GitHub Tag & Release
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        python-version: [3.6, 3.7]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements_test.txt
+    - name: Unittest with pytest
+      run: |
+        pytest --cov=src --cov-report term-missing
+    - name: Lint with flake8
+      run: |
+        flake8 --ignore=E501,E402 ./src
+    - name: AWS SAM CLI
+      run: |
+        pip install --user aws-sam-cli
+        USER_BASE_PATH=$(python -m site --user-base)
+        export PATH=$PATH:$USER_BASE_PATH/bin
+    - name: Build SAM Package
+      run: |
+        sam build -t .sam/transform.yaml -m ./requirements.txt -b ./build -s .
+    - name: ZIP SAM Package
+      working-directory: ./build
+      run: |
+        zip -r9 $(git rev-parse HEAD | cut -c 1-7).{repo}.zip
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./build/$(git rev-parse HEAD | cut -c 1-7).{repo}.zip
+        asset_name: $(git rev-parse HEAD | cut -c 1-7).{repo}.zip
+        asset_content_type: application/zip
