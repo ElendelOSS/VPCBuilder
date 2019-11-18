@@ -36,8 +36,14 @@ jobs:
         USER_BASE_PATH=$(python -m site --user-base)
         export PATH=$PATH:$USER_BASE_PATH/bin
     - name: Build SAM Package
-      run: |
-        sam build -t .sam/transform.yaml -m ./requirements.txt -b ./build -s .
+      uses: chriscoffee/sam-github-actions@master
+      env:
+        AWS_ACCESS_KEY_ID: ''
+        AWS_SECRET_ACCESS_KEY: ''
+        AWS_DEFAULT_REGION: ap-southeast-2
+        S3_BUCKET: ''
+      with:
+        args: build -t .sam/transform.yaml -m ./requirements.txt -b ./build -s .
     - name: ZIP SAM Package
       working-directory: ./build
       run: |
