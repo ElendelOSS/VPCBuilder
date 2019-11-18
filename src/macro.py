@@ -1,19 +1,35 @@
 import json
 import traceback
+import os
+import re
+import logging
+
+logging.basicConfig(format='%(asctime)s [%(levelname)s] (%(funcName)s) %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logger = logging.getLogger("VPCBuilder.Macro")
+logger.setLevel(int(os.environ.get("Logging", logging.INFO)))
+
+ipv4_regex = re.compile('^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$')
+ipv6_regex = re.compile('^s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$')
 
 
 def isIPv6NetACL(cidr):
-    if cidr == "::/0":
+    if ipv6_regex.match(cidr):
         return "Ipv6CidrBlock"
-    else:
+    elif ipv4_regex.match(cidr):
         return "CidrBlock"
+    else:
+        logger.debug("Invalid CIDR: {}".format(cidr))
+        return "INVALID_CIDR"
 
 
 def isIPv6Route(cidr):
-    if cidr == "::/0":
+    if ipv6_regex.match(cidr):
         return "DestinationIpv6CidrBlock"
-    else:
+    elif ipv4_regex.match(cidr):
         return "DestinationCidrBlock"
+    else:
+        logger.debug("Invalid CIDR: {}".format(cidr))
+        return "INVALID_CIDR"
 
 
 def str2bool(v):
@@ -23,27 +39,86 @@ def str2bool(v):
         return False
 
 
-def buildTransitGateways(properties, resources, outputs):
-    for transitgw, objects in properties["TransitGateways"].iteritems():
-        resources[transitgw + "TransitGWAttach"] = {
+def hasIntrinsicFunction(value):
+    intrinsic_list = ["Fn::Sub", "Fn::Ref", "Fn::Base64", "Fn::Cidr", "Fn::GetAtt", "Fn::GetAZs", "Fn::ImportValue", "Fn::Join", "Fn::Select", "Fn::Split", "Fn::Transform", "Ref"]
+    if type(value) == dict:
+        logger.debug("Value is of type Dict: {}".format(value))
+        logger.debug("Intrinsic List: {}".format(intrinsic_list))
+        logger.debug("Value Keys: {}".format(value.keys()))
+
+        return any(x in intrinsic_list for x in value.keys())
+
+
+def resolveParameters(value, parameter):
+    logger.debug("Parameters: {}".format(parameter))
+    if type(value) == dict:
+        pattern = "\${([\w]*)}"
+        resolved = value
+        for k, v in resolved.items():
+            logger.debug("{} {}".format(k, v))
+            results = re.findall(pattern, v)
+            for item in results:
+                logger.debug("Found Item {} in Value".format(item))
+                if item in parameter.keys():
+                    parameter_value = parameter.get(item, None)
+                    if parameter_value:
+                        resolved[k] = re.sub("(\${{{}}})".format(str(item)), str(parameter_value), resolved[k])
+            return resolved[k]
+    elif type(value) == str:
+        if value in parameter.keys():
+            logger.debug("Found Value {} in Parameters".format(value))
+            parameter_value = parameter.get(value, None)
+            return parameter_value
+
+
+def resolveIntrinsicFunction(value, parameters):
+    return resolveParameters(value, parameters) if hasIntrinsicFunction(value) else value
+
+
+def handleIntrinsicFunction(value):
+    return value if hasIntrinsicFunction(value) else {"Ref": value}
+
+
+def resolveCIDRParameter(value, parameters):
+    return value if ipv4_regex.match(value) or ipv6_regex.match(value) else resolveParameters(value, parameters)
+
+
+def handleCIDRParameter(value):
+    return value if ipv4_regex.match(value) or ipv6_regex.match(value) else {"Ref": value}
+
+
+def buildTags(tags):
+    generated_tags = []
+    for k, v in tags.items():
+        generated_tags.append(
+            {
+                "Key": k,
+                "Value": v
+            }
+        )
+
+    return generated_tags
+
+
+def buildTransitGateways(properties, resources, outputs, parameters):
+    for transitgw, objects in properties["TransitGateways"].items():
+        resources["{}TransitGWAttach".format(transitgw)] = {
             "Type": "AWS::EC2::TransitGatewayAttachment",
             "Properties": {
                 "TransitGatewayId": objects["TransitGatewayId"],
-                "VpcId": {
-                    "Ref": properties["Details"]["VPCName"]
-                }
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
             }
         }
 
-        resources[transitgw + "TransitGWAttach"]["Properties"]["SubnetIds"] = []
+        resources["{}TransitGWAttach".format(transitgw)]["Properties"]["SubnetIds"] = []
         for subnet in objects["Subnets"]:
             resources[transitgw + "TransitGWAttach"]["Properties"]["SubnetIds"].append(
                 {
                     "Ref": subnet
                 }
             )
-        resources[transitgw + "TransitGWAttach"]["Properties"]["Tags"] = []
-        for k, v in objects["Tags"].iteritems():
+        resources["{}TransitGWAttach".format(transitgw)]["Properties"]["Tags"] = []
+        for k, v in objects["Tags"].items():
             resources[transitgw + "TransitGWAttach"]["Properties"]["Tags"].append(
                 {
                     "Key": k,
@@ -51,11 +126,31 @@ def buildTransitGateways(properties, resources, outputs):
                 }
             )
 
+        if properties["Tags"]:
+            resources["{}TransitGWAttach".format(transitgw)]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
+
+        if "RouteTables" in objects:
+            for routetable, routes in objects["RouteTables"].items():
+                for route in routes:
+                    resources["{}{}{}".format(transitgw, routetable, route["RouteName"])] = {
+                        "Type": "AWS::EC2::Route",
+                        "Properties": {
+                            isIPv6Route(route["RouteCIDR"]): route["RouteCIDR"],
+                            "TransitGatewayId": objects["TransitGatewayId"],
+                            "RouteTableId": {
+                                "Ref": routetable
+                            }
+                        },
+                        "DependsOn": [
+                            "{}TransitGWAttach".format(transitgw)
+                        ]
+                    }
+
     return resources, outputs
 
 
-def buildRouteTables(properties, resources, outputs):
-    for routetable, objects in properties["RouteTables"].iteritems():
+def buildRouteTables(properties, resources, outputs, parameters):
+    for routetable, objects in properties["RouteTables"].items():
         resources[routetable] = {
             "Type": "AWS::EC2::RouteTable",
             "Properties": {
@@ -65,11 +160,12 @@ def buildRouteTables(properties, resources, outputs):
                         "Value": routetable
                     }
                 ],
-                "VpcId": {
-                    "Ref": properties["Details"]["VPCName"]
-                }
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
             }
         }
+
+        if properties["Tags"]:
+            resources[routetable]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
 
         outputs[routetable] = {
             "Description": routetable,
@@ -83,22 +179,24 @@ def buildRouteTables(properties, resources, outputs):
             }
         }
 
-        resources[routetable + "RoutePropagation"] = {
-            "Type": "AWS::EC2::VPNGatewayRoutePropagation",
-            "Properties": {
-                "RouteTableIds": [
-                    {
-                        "Ref": routetable
+        if "VGW" in parameters:
+            resources[routetable + "RoutePropagation"] = {
+                "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+                "Properties": {
+                    "RouteTableIds": [
+                        {
+                            "Ref": routetable
+                        }
+                    ],
+                    "VpnGatewayId": {
+                        "Ref": "VGW"
                     }
-                ],
-                "VpnGatewayId": {
-                    "Ref": "VGW"
-                }
-            },
-            "DependsOn": [
-                "VPCGatewayAttachment"
-            ]
-        }
+                },
+                "DependsOn": [
+                    "VPCGatewayAttachment"
+                ]
+            }
+
         if objects is not None:
             for route in objects:
                 resources[route["RouteName"]] = {
@@ -117,9 +215,9 @@ def buildRouteTables(properties, resources, outputs):
     return resources, outputs
 
 
-def buildSubnets(properties, resources, outputs):
+def buildSubnets(properties, resources, outputs, parameters):
     subnet_count = 0
-    for subnet, objects in properties["Subnets"].iteritems():
+    for subnet, objects in properties["Subnets"].items():
         resources[subnet] = {
             "Type": "AWS::EC2::Subnet",
             "Properties": {
@@ -138,11 +236,11 @@ def buildSubnets(properties, resources, outputs):
                         "Value": subnet
                     }
                 ],
-                "VpcId": {
-                    "Ref": properties["Details"]["VPCName"]
-                }
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
             }
         }
+        if properties["Tags"]:
+            resources[subnet]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
 
         outputs[subnet] = {
             "Description": subnet,
@@ -180,15 +278,16 @@ def buildSubnets(properties, resources, outputs):
             }
         }
         subnet_count = subnet_count + 1
+
     if "IPv6" in properties["Details"]:
         subnet_itr = 0
-        for subnet, objects in properties["Subnets"].iteritems():
+        for subnet, objects in properties["Subnets"].items():
             if properties["Details"]["IPv6"]:
                 resources[subnet]["DependsOn"] = "IPv6Block"
                 resources[subnet]["Properties"]["AssignIpv6AddressOnCreation"] = True
                 resources[subnet]["Properties"]["Ipv6CidrBlock"] = {
                     "Fn::Select": [
-                        subnet_itr,
+                        objects["IPv6Iter"],
                         {
                             "Fn::Cidr": [
                                 {
@@ -196,7 +295,7 @@ def buildSubnets(properties, resources, outputs):
                                         0,
                                         {
                                             "Fn::GetAtt": [
-                                                properties["Details"]["VPCName"],
+                                                resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters),
                                                 "Ipv6CidrBlocks"
                                             ]
                                         }
@@ -213,8 +312,8 @@ def buildSubnets(properties, resources, outputs):
     return resources, outputs
 
 
-def buildNetworlACLs(properties, resources, outputs):
-    for networkacl, objects in properties["NetworkACLs"].iteritems():
+def buildNetworlACLs(properties, resources, outputs, parameters):
+    for networkacl, objects in properties["NetworkACLs"].items():
         resources[networkacl] = {
             "Type": "AWS::EC2::NetworkAcl",
             "Properties": {
@@ -224,11 +323,12 @@ def buildNetworlACLs(properties, resources, outputs):
                         "Value": networkacl
                     }
                 ],
-                "VpcId": {
-                    "Ref": properties["Details"]["VPCName"]
-                }
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
             }
         }
+
+        if properties["Tags"]:
+            resources[networkacl]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
 
         outputs[networkacl] = {
             "Description": networkacl,
@@ -247,7 +347,7 @@ def buildNetworlACLs(properties, resources, outputs):
             resources[entry] = {
                 "Type": "AWS::EC2::NetworkAclEntry",
                 "Properties": {
-                    isIPv6NetACL(splitset[4]): splitset[4],
+                    isIPv6NetACL(resolveCIDRParameter(splitset[4], parameters)): handleCIDRParameter(splitset[4]),
                     "Egress": str2bool(splitset[3]),
                     "NetworkAclId": {
                         "Ref": networkacl
@@ -265,8 +365,8 @@ def buildNetworlACLs(properties, resources, outputs):
     return resources, outputs
 
 
-def buildNATGateways(properties, resources, outputs):
-    for natgw, objects in properties["NATGateways"].iteritems():
+def buildNATGateways(properties, resources, outputs, parameters):
+    for natgw, objects in properties["NATGateways"].items():
         resources["EIP" + natgw] = {
             "Type": "AWS::EC2::EIP",
             "Properties": {
@@ -307,6 +407,9 @@ def buildNATGateways(properties, resources, outputs):
             }
         }
 
+        if properties["Tags"]:
+            resources[natgw]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
+
         outputs[natgw] = {
             "Description": natgw,
             "Value": {
@@ -319,46 +422,53 @@ def buildNATGateways(properties, resources, outputs):
             }
         }
 
-        resources["Route" + natgw] = {
-            "Type": "AWS::EC2::Route",
-            "Properties": {
-                "DestinationCidrBlock": "0.0.0.0/0",
-                "NatGatewayId": {
-                    "Ref": natgw
-                },
-                "RouteTableId": {
-                    "Ref": objects["Routetable"]
-                }
-            }
-        }
-        if "IPv6" in properties["Details"]:
-            if properties["Details"]["IPv6"]:
-                resources["Route" + natgw + "IPv6"] = {
-                    "Type": "AWS::EC2::Route",
-                    "Properties": {
-                        "DestinationIpv6CidrBlock": "::/0",
-                        "EgressOnlyInternetGatewayId": {
-                            "Ref": "EgressGateway"
-                        },
-                        "RouteTableId": {
-                            "Ref": objects["Routetable"]
-                        }
+        if isinstance(objects["Routetable"], list):
+            logger.debug("Routetable is of type list no conversion")
+            routetable_list = objects["Routetable"]
+        else:
+            logger.debug("Routetable is of type list no conversion")
+            routetable_list = [objects["Routetable"]]
+
+        for routetable in routetable_list:
+            resources["{}{}".format(str(routetable), natgw)] = {
+                "Type": "AWS::EC2::Route",
+                "Properties": {
+                    "DestinationCidrBlock": "0.0.0.0/0",
+                    "NatGatewayId": {
+                        "Ref": natgw
+                    },
+                    "RouteTableId": {
+                        "Ref": routetable
                     }
                 }
+            }
+
+            if "IPv6" in properties["Details"]:
+                if properties["Details"]["IPv6"]:
+                    resources["{}{}IPv6".format(str(routetable), natgw)] = {
+                        "Type": "AWS::EC2::Route",
+                        "Properties": {
+                            "DestinationIpv6CidrBlock": "::/0",
+                            "EgressOnlyInternetGatewayId": {
+                                "Ref": "EgressGateway"
+                            },
+                            "RouteTableId": {
+                                "Ref": routetable
+                            }
+                        }
+                    }
 
     return resources, outputs
 
 
-def buildSecurityGroups(properties, resources, outputs):
-    for secgroup, objects in properties["SecurityGroups"].iteritems():
+def buildSecurityGroups(properties, resources, outputs, parameters):
+    for secgroup, objects in properties["SecurityGroups"].items():
         resources[secgroup] = {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupName": secgroup,
                 "GroupDescription": objects["GroupDescription"],
-                "VpcId": {
-                    "Ref": properties["Details"]["VPCName"]
-                }
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
             }
         }
 
@@ -385,26 +495,27 @@ def buildSecurityGroups(properties, resources, outputs):
                 })
         if "Tags" in objects:
             resources[secgroup]["Properties"]["Tags"] = []
-            for k, v in objects["Tags"].iteritems():
+            for k, v in objects["Tags"].items():
                 resources[secgroup]["Properties"]["Tags"].append({
                     "Key": k,
                     "Value": v
                 })
 
+        if properties["Tags"]:
+            resources[secgroup]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
+
     return resources, outputs
 
 
-def buildVPCEndpoints(properties, resources, outputs):
-    for endpoint, objects in properties["Endpoints"].iteritems():
+def buildVPCEndpoints(properties, resources, outputs, parameters):
+    for endpoint, objects in properties["Endpoints"].items():
         santisedendpoint = endpoint.replace("-", "").replace(".", "")
         resources[santisedendpoint + "EndPoint"] = {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
                 "ServiceName": {"Fn::Join": ["", ["com.amazonaws.", {"Ref": "AWS::Region"}, "." + endpoint]]},
                 "VpcEndpointType": objects["Type"],
-                "VpcId": {
-                    "Ref": properties["Details"]["VPCName"]
-                }
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
             }
         }
 
@@ -430,8 +541,9 @@ def buildVPCEndpoints(properties, resources, outputs):
     return resources, outputs
 
 
-def buildBaseline(properties, resources, outputs):
-    resources[properties["Details"]["VPCName"]] = {
+def buildBaseline(properties, resources, outputs, parameters):
+    logger.debug("VPC Details {}".format(properties.get("Details")))
+    resources[resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)] = {
         "Type": "AWS::EC2::VPC",
         "Properties": {
             "CidrBlock": properties["CIDR"],
@@ -441,17 +553,18 @@ def buildBaseline(properties, resources, outputs):
             "Tags": [
                 {
                     "Key": "Name",
-                    "Value": properties["Details"]["VPCName"]
+                    "Value": resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)
                 }
             ]
         }
     }
 
-    outputs[properties["Details"]["VPCName"]] = {
-        "Description": properties["Details"]["VPCName"],
-        "Value": {
-            "Ref": properties["Details"]["VPCName"]
-        },
+    if properties["Tags"]:
+        resources[resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
+
+    outputs[resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)] = {
+        "Description": resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters),
+        "Value": handleIntrinsicFunction(properties["Details"]["VPCName"]),
         "Export": {
             "Name": {
                 "Fn::Sub": "${AWS::StackName}-VPCid"
@@ -464,9 +577,7 @@ def buildBaseline(properties, resources, outputs):
             resources["IPv6Block"] = {
                 "Type": "AWS::EC2::VPCCidrBlock",
                 "Properties": {
-                    "VpcId": {
-                        "Ref": properties["Details"]["VPCName"]
-                    },
+                    "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)),
                     "AmazonProvidedIpv6CidrBlock": True
                 }
             }
@@ -474,9 +585,7 @@ def buildBaseline(properties, resources, outputs):
             resources["EgressGateway"] = {
                 "Type": "AWS::EC2::EgressOnlyInternetGateway",
                 "Properties": {
-                    "VpcId": {
-                        "Ref": properties["Details"]["VPCName"]
-                    }
+                    "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
                 }
             }
 
@@ -493,15 +602,16 @@ def buildBaseline(properties, resources, outputs):
         }
     }
 
+    if properties["Tags"]:
+        resources[properties["DHCP"]["Name"]]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
+
     resources[properties["DHCP"]["Name"] + "Association"] = {
         "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
         "Properties": {
             "DhcpOptionsId": {
                 "Ref": properties["DHCP"]["Name"]
             },
-            "VpcId": {
-                "Ref": properties["Details"]["VPCName"]
-            }
+            "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
         }
     }
 
@@ -517,29 +627,29 @@ def buildBaseline(properties, resources, outputs):
         }
     }
 
+    if properties["Tags"]:
+        resources["InternetGateway"]["Properties"]["Tags"].extend(buildTags(properties["Tags"]))
+
     resources["IGWVPCGatewayAttachment"] = {
         "Type": "AWS::EC2::VPCGatewayAttachment",
         "Properties": {
             "InternetGatewayId": {
                 "Ref": "InternetGateway"
             },
-            "VpcId": {
-                "Ref": properties["Details"]["VPCName"]
-            }
+            "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters))
         }
     }
 
-    resources["VPCGatewayAttachment"] = {
-        "Type": "AWS::EC2::VPCGatewayAttachment",
-        "Properties": {
-            "VpcId": {
-                "Ref": properties["Details"]["VPCName"]
-            },
-            "VpnGatewayId": {
-                "Ref": "VGW"
+    if "VGW" in parameters:
+        resources["VPCGatewayAttachment"] = {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)),
+                "VpnGatewayId": {
+                    "Ref": "VGW"
+                }
             }
         }
-    }
 
     resources["VPCFlowLogsRole"] = {
         "Type": "AWS::IAM::Role",
@@ -588,9 +698,7 @@ def buildBaseline(properties, resources, outputs):
                 "Fn::GetAtt": ["VPCFlowLogsRole", "Arn"]
             },
             "LogGroupName": "FlowLogsGroup",
-            "ResourceId": {
-                "Ref": properties["Details"]["VPCName"]
-            },
+            "ResourceId": handleIntrinsicFunction(resolveIntrinsicFunction(properties["Details"]["VPCName"], parameters)),
             "ResourceType": "VPC",
             "TrafficType": "ALL"
         }
@@ -600,7 +708,7 @@ def buildBaseline(properties, resources, outputs):
 
 
 def handler(event, context):
-
+    print(json.dumps(event))
     macro_response = {
         "requestId": event["requestId"],
         "status": "success"
@@ -615,33 +723,34 @@ def handler(event, context):
         resources = {}
         outputs = {}
         response = event["fragment"]
+        parameters = event.get("templateParameterValues", {})
         for k in list(response["Resources"].keys()):
-            if response["Resources"][k]["Type"] == "Elendel::Network::VPC":
+            if response["Resources"][k]["Type"] == "Versent::Network::VPC":
                 if "Properties" in response["Resources"][k]:
                     properties = response["Resources"][k]["Properties"]
 
-                    resources, outputs = buildBaseline(properties, resources, outputs)
+                    resources, outputs = buildBaseline(properties, resources, outputs, parameters)
 
                     if "TransitGateways" in properties:
-                        resources, outputs = buildTransitGateways(properties, resources, outputs)
+                        resources, outputs = buildTransitGateways(properties, resources, outputs, parameters)
 
                     if "RouteTables" in properties:
-                        resources, outputs = buildRouteTables(properties, resources, outputs)
+                        resources, outputs = buildRouteTables(properties, resources, outputs, parameters)
 
                     if "Subnets" in properties:
-                        resources, outputs = buildSubnets(properties, resources, outputs)
+                        resources, outputs = buildSubnets(properties, resources, outputs, parameters)
 
                     if "NetworkACLs" in properties:
-                        resources, outputs = buildNetworlACLs(properties, resources, outputs)
+                        resources, outputs = buildNetworlACLs(properties, resources, outputs, parameters)
 
                     if "NATGateways" in properties:
-                        resources, outputs = buildNATGateways(properties, resources, outputs)
+                        resources, outputs = buildNATGateways(properties, resources, outputs, parameters)
 
                     if "SecurityGroups" in properties:
-                        resources, outputs = buildSecurityGroups(properties, resources, outputs)
+                        resources, outputs = buildSecurityGroups(properties, resources, outputs, parameters)
 
                     if "Endpoints" in properties:
-                        resources, outputs = buildVPCEndpoints(properties, resources, outputs)
+                        resources, outputs = buildVPCEndpoints(properties, resources, outputs, parameters)
 
         response["Resources"] = resources
         response["Outputs"] = outputs

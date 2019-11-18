@@ -21,13 +21,13 @@ class TestVPCBuilderSubnets(TestVPCBuilderSubnetsSetup):
         properties = yaml.load("""\
             CIDR: 172.16.0.0/20
             Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
-            Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}
+            Tags: {Template: VPC for private endpoints egress only, "info:environment": Staging, "info:owner": Versent}
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             Subnets:
-                ReservedMgmt1: {CIDR: 172.16.0.0/26, AZ: 0, NetACL: InternalSubnetAcl, RouteTable: InternalRT1 }
-                ReservedMgmt2: {CIDR: 172.16.1.0/26, AZ: 1, NetACL: InternalSubnetAcl, RouteTable: InternalRT2 }
-                ReservedMgmt3: {CIDR: 172.16.2.0/26, AZ: 2, NetACL: InternalSubnetAcl, RouteTable: InternalRT3 }
-        """)
+                ReservedMgmt1: {CIDR: 172.16.0.0/26, AZ: 0, NetACL: InternalSubnetAcl, RouteTable: InternalRT1, IPv6Iter: 0 }
+                ReservedMgmt2: {CIDR: 172.16.1.0/26, AZ: 1, NetACL: InternalSubnetAcl, RouteTable: InternalRT2, IPv6Iter: 1 }
+                ReservedMgmt3: {CIDR: 172.16.2.0/26, AZ: 2, NetACL: InternalSubnetAcl, RouteTable: InternalRT3, IPv6Iter: 2 }
+        """, Loader=yaml.FullLoader)
         print(properties)
         expected = {
             'ReservedMgmt1': {
@@ -36,10 +36,24 @@ class TestVPCBuilderSubnets(TestVPCBuilderSubnetsSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'ReservedMgmt1',
-                        'Key': 'Name'
-                    }],
+                    'Tags': [
+                        {
+                            'Value': 'ReservedMgmt1',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ],
                     'Ipv6CidrBlock': {
                         'Fn::Select': [0, {
                             'Fn::Cidr': [{
@@ -65,10 +79,24 @@ class TestVPCBuilderSubnets(TestVPCBuilderSubnetsSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'ReservedMgmt2',
-                        'Key': 'Name'
-                    }],
+                    'Tags': [
+                        {
+                            'Value': 'ReservedMgmt2',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ],
                     'Ipv6CidrBlock': {
                         'Fn::Select': [1, {
                             'Fn::Cidr': [{
@@ -94,10 +122,24 @@ class TestVPCBuilderSubnets(TestVPCBuilderSubnetsSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'ReservedMgmt3',
-                        'Key': 'Name'
-                    }],
+                    'Tags': [
+                        {
+                            'Value': 'ReservedMgmt3',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ],
                     'Ipv6CidrBlock': {
                         'Fn::Select': [2, {
                             'Fn::Cidr': [{
@@ -184,5 +226,5 @@ class TestVPCBuilderSubnets(TestVPCBuilderSubnetsSetup):
                 }
             }
         }
-        actual, outputs = src.macro.buildSubnets(properties, resources, outputs)
+        actual, outputs = src.macro.buildSubnets(properties, resources, outputs, parameters={})
         self.assertEquals(expected, actual)

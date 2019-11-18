@@ -29,81 +29,93 @@ class TestVPCBuilderFragmentLinter(TestVPCBuilderFragmentLinterSetup):
             "fragment": {
                 "AWSTemplateFormatVersion": "2010-09-09",
                 "Resources": {
-                    "KABLAMOBUILDVPC": {
-                        "Type": "Elendel::Network::VPC",
+                    "VPC": {
+                        "Type": "Versent::Network::VPC",
                         "Properties": {
                             "Subnets": {
                                 "ReservedMgmt1": {
                                     "CIDR": "172.16.0.0/26",
                                     "AZ": 0,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT1"
+                                    "RouteTable": "InternalRT1",
+                                    "IPv6Iter": 0
                                 },
                                 "ReservedMgmt2": {
                                     "CIDR": "172.16.1.0/26",
                                     "AZ": 1,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT2"
+                                    "RouteTable": "InternalRT2",
+                                    "IPv6Iter": 1
                                 },
                                 "ReservedMgmt3": {
                                     "CIDR": "172.16.2.0/26",
                                     "AZ": 2,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT3"
+                                    "RouteTable": "InternalRT3",
+                                    "IPv6Iter": 2
                                 },
                                 "Internal1": {
                                     "CIDR": "172.16.3.0/24",
                                     "AZ": 0,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT1"
+                                    "RouteTable": "InternalRT1",
+                                    "IPv6Iter": 6
                                 },
                                 "Internal2": {
                                     "CIDR": "172.16.4.0/24",
                                     "AZ": 1,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT2"
+                                    "RouteTable": "InternalRT2",
+                                    "IPv6Iter": 7
                                 },
                                 "Internal3": {
                                     "CIDR": "172.16.5.0/24",
                                     "AZ": 2,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT3"
+                                    "RouteTable": "InternalRT3",
+                                    "IPv6Iter": 8
                                 },
                                 "ReservedNet3": {
                                     "CIDR": "172.16.2.192/26",
                                     "AZ": 2,
                                     "NetACL": "RestrictedSubnetAcl",
-                                    "RouteTable": "PublicRT"
+                                    "RouteTable": "PublicRT",
+                                    "IPv6Iter": 9
                                 },
                                 "ReservedNet2": {
                                     "CIDR": "172.16.1.192/26",
                                     "AZ": 1,
                                     "NetACL": "RestrictedSubnetAcl",
-                                    "RouteTable": "PublicRT"
+                                    "RouteTable": "PublicRT",
+                                    "IPv6Iter": 10
                                 },
                                 "ReservedNet1": {
                                     "CIDR": "172.16.0.192/26",
                                     "AZ": 0,
                                     "NetACL": "RestrictedSubnetAcl",
-                                    "RouteTable": "PublicRT"
+                                    "RouteTable": "PublicRT",
+                                    "IPv6Iter": 11
                                 },
                                 "PerimeterInternal1": {
                                     "CIDR": "172.16.6.0/24",
                                     "AZ": 0,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT1"
+                                    "RouteTable": "InternalRT1",
+                                    "IPv6Iter": 3
                                 },
                                 "PerimeterInternal2": {
                                     "CIDR": "172.16.7.0/24",
                                     "AZ": 1,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT2"
+                                    "RouteTable": "InternalRT2",
+                                    "IPv6Iter": 4
                                 },
                                 "PerimeterInternal3": {
                                     "CIDR": "172.16.8.0/24",
                                     "AZ": 2,
                                     "NetACL": "InternalSubnetAcl",
-                                    "RouteTable": "InternalRT3"
+                                    "RouteTable": "InternalRT3",
+                                    "IPv6Iter": 5
                                 }
                             },
                             "TransitGateways": {
@@ -129,6 +141,38 @@ class TestVPCBuilderFragmentLinter(TestVPCBuilderFragmentLinterSetup):
                                     "Tags": {
                                         "Name": "PRIVATE-EGRESS-VPC-TGW2",
                                         "Purpose": "Gateway Attach 2"
+                                    },
+                                    "RouteTables": {
+                                        "InternalRT1": [
+                                            {
+                                                "RouteName": "Internal1",
+                                                "RouteCIDR": "10.0.0.0/8"
+                                            },
+                                            {
+                                                "RouteName": "Internal2",
+                                                "RouteCIDR": "192.168.0.0/16"
+                                            }
+                                        ],
+                                        "InternalRT2": [
+                                            {
+                                                "RouteName": "Internal1",
+                                                "RouteCIDR": "10.0.0.0/8"
+                                            },
+                                            {
+                                                "RouteName": "Internal2",
+                                                "RouteCIDR": "192.168.0.0/16"
+                                            }
+                                        ],
+                                        "InternalRT3": [
+                                            {
+                                                "RouteName": "Internal1",
+                                                "RouteCIDR": "10.0.0.0/8"
+                                            },
+                                            {
+                                                "RouteName": "Internal2",
+                                                "RouteCIDR": "192.168.0.0/16"
+                                            }
+                                        ]
                                     }
                                 }
                             },
@@ -553,12 +597,12 @@ class TestVPCBuilderFragmentLinter(TestVPCBuilderFragmentLinterSetup):
 
         actual = src.macro.handler(transform_call, "")
 
-        with open(os.path.join(template_path, template_filename), "wb") as fh:
-            fh.write(json.dumps(actual['fragment'], sort_keys=True, indent=4, separators=(',', ': ')))
+        with open(os.path.join(template_path, template_filename), "w") as fh:
+            fh.write(json.dumps(actual['fragment'], default=str, sort_keys=True, indent=4, separators=(',', ': ')))
 
         template = cfnlint.decode.cfn_json.load(template_path + "/" + template_filename)
 
-        rules = cfnlint.core.get_rules([], [], [])
+        rules = cfnlint.core.get_rules([], ['E3002'], [])
 
         results = []
         results.extend(

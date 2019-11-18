@@ -19,3 +19,7 @@ uploadToS3: buildPackage
 	aws s3 cp ./$(PROJECT).zip s3://$(BUCKET_NAME)/$(PROJECT)/$(PROJECT)-$(GITHASH).zip --acl bucket-owner-full-control
 	echo 'File version is $(PROJECT)-$(GITHASH).zip'
 .PHONY: uploadToS3
+
+testLocal:
+	docker build -f Dockerfile.test -t $(PROJECT)-local-test .
+.PHONY: testLocal

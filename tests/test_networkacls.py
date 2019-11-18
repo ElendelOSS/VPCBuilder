@@ -21,7 +21,7 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
         properties = yaml.load("""\
             CIDR: 172.16.0.0/20
             Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
-            Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}
+            Tags: {Template: VPC for private endpoints egress only, "info:environment": Staging, "info:owner": Versent}
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             NetworkACLs:
                 RestrictedSubnetAcl:
@@ -40,7 +40,7 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     InternalSubnetAclEntryInUDPUnreserved: '103,17,allow,false,0.0.0.0/0,1024,65535'
                     InternalSubnetAclEntryInTCPUnreservedIPv6: '104,6,allow,false,::/0,1024,65535'
                     InternalSubnetAclEntryInUDPUnreservedIPv6: '105,17,allow,false,::/0,1024,65535'
-        """)
+        """, Loader=yaml.FullLoader)
         expected = {
             'RestrictedSubnetAclEntryInTCPUnReserved': {
                 'Type': 'AWS::EC2::NetworkAclEntry',
@@ -99,10 +99,24 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'RestrictedSubnetAcl',
-                        'Key': 'Name'
-                    }]
+                    'Tags': [
+                        {
+                            'Value': 'RestrictedSubnetAcl',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ]
                 }
             },
             'RestrictedSubnetAclEntryOutTCPUnReserved': {
@@ -128,10 +142,24 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'InternalSubnetAcl',
-                        'Key': 'Name'
-                    }]
+                    'Tags': [
+                        {
+                            'Value': 'InternalSubnetAcl',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ]
                 }
             },
             'RestrictedSubnetAclEntryOutTCPUnReservedIPv6': {
@@ -305,5 +333,5 @@ class TestVPCBuilderNetworkACL(TestVPCBuilderNetworkACLSetup):
                 }
             }
         }
-        actual, outputs = src.macro.buildNetworlACLs(properties, resources, outputs)
+        actual, outputs = src.macro.buildNetworlACLs(properties, resources, outputs, parameters={})
         self.assertEquals(expected, actual)

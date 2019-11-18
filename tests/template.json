@@ -300,6 +300,14 @@
                     {
                         "Key": "Name",
                         "Value": "DhcpOptions"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ]
             },
@@ -401,6 +409,14 @@
                     {
                         "Key": "Name",
                         "Value": "Internal1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -470,6 +486,14 @@
                     {
                         "Key": "Name",
                         "Value": "Internal2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -539,6 +563,14 @@
                     {
                         "Key": "Name",
                         "Value": "Internal3"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -575,6 +607,14 @@
                     {
                         "Key": "Name",
                         "Value": "InternalRT1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -582,6 +622,30 @@
                 }
             },
             "Type": "AWS::EC2::RouteTable"
+        },
+        "InternalRT1NATGW1": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "NATGW1"
+                },
+                "RouteTableId": {
+                    "Ref": "InternalRT1"
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "InternalRT1NATGW1IPv6": {
+            "Properties": {
+                "DestinationIpv6CidrBlock": "::/0",
+                "EgressOnlyInternetGatewayId": {
+                    "Ref": "EgressGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "InternalRT1"
+                }
+            },
+            "Type": "AWS::EC2::Route"
         },
         "InternalRT1RoutePropagation": {
             "DependsOn": [
@@ -605,6 +669,14 @@
                     {
                         "Key": "Name",
                         "Value": "InternalRT2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -612,6 +684,30 @@
                 }
             },
             "Type": "AWS::EC2::RouteTable"
+        },
+        "InternalRT2NATGW2": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "NATGW2"
+                },
+                "RouteTableId": {
+                    "Ref": "InternalRT2"
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "InternalRT2NATGW2IPv6": {
+            "Properties": {
+                "DestinationIpv6CidrBlock": "::/0",
+                "EgressOnlyInternetGatewayId": {
+                    "Ref": "EgressGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "InternalRT2"
+                }
+            },
+            "Type": "AWS::EC2::Route"
         },
         "InternalRT2RoutePropagation": {
             "DependsOn": [
@@ -635,6 +731,14 @@
                     {
                         "Key": "Name",
                         "Value": "InternalRT3"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -642,6 +746,30 @@
                 }
             },
             "Type": "AWS::EC2::RouteTable"
+        },
+        "InternalRT3NATGW3": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "NATGW3"
+                },
+                "RouteTableId": {
+                    "Ref": "InternalRT3"
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "InternalRT3NATGW3IPv6": {
+            "Properties": {
+                "DestinationIpv6CidrBlock": "::/0",
+                "EgressOnlyInternetGatewayId": {
+                    "Ref": "EgressGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "InternalRT3"
+                }
+            },
+            "Type": "AWS::EC2::Route"
         },
         "InternalRT3RoutePropagation": {
             "DependsOn": [
@@ -665,6 +793,14 @@
                     {
                         "Key": "Name",
                         "Value": "InternalSubnetAcl"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -968,6 +1104,14 @@
                     {
                         "Key": "Name",
                         "Value": "InternetGateway"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ]
             },
@@ -988,6 +1132,14 @@
                     {
                         "Key": "Name",
                         "Value": "NATGW1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ]
             },
@@ -1008,6 +1160,14 @@
                     {
                         "Key": "Name",
                         "Value": "NATGW2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ]
             },
@@ -1028,6 +1188,14 @@
                     {
                         "Key": "Name",
                         "Value": "NATGW3"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ]
             },
@@ -1043,6 +1211,14 @@
                     {
                         "Key": "Name",
                         "Value": "PRIVATEEGRESSVPC"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ]
             },
@@ -1087,6 +1263,14 @@
                     {
                         "Key": "Name",
                         "Value": "PerimeterInternal1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1156,6 +1340,14 @@
                     {
                         "Key": "Name",
                         "Value": "PerimeterInternal2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1225,6 +1417,14 @@
                     {
                         "Key": "Name",
                         "Value": "PerimeterInternal3"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1261,6 +1461,14 @@
                     {
                         "Key": "Name",
                         "Value": "PublicRT"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1348,6 +1556,14 @@
                     {
                         "Key": "Name",
                         "Value": "ReservedMgmt1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1417,6 +1633,14 @@
                     {
                         "Key": "Name",
                         "Value": "ReservedMgmt2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1486,6 +1710,14 @@
                     {
                         "Key": "Name",
                         "Value": "ReservedMgmt3"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1555,6 +1787,14 @@
                     {
                         "Key": "Name",
                         "Value": "ReservedNet1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1624,6 +1864,14 @@
                     {
                         "Key": "Name",
                         "Value": "ReservedNet2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1693,6 +1941,14 @@
                     {
                         "Key": "Name",
                         "Value": "ReservedNet3"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -1729,6 +1985,14 @@
                     {
                         "Key": "Name",
                         "Value": "RestrictedSubnetAcl"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {
@@ -2298,78 +2562,6 @@
             },
             "Type": "AWS::EC2::NetworkAclEntry"
         },
-        "RouteNATGW1": {
-            "Properties": {
-                "DestinationCidrBlock": "0.0.0.0/0",
-                "NatGatewayId": {
-                    "Ref": "NATGW1"
-                },
-                "RouteTableId": {
-                    "Ref": "InternalRT1"
-                }
-            },
-            "Type": "AWS::EC2::Route"
-        },
-        "RouteNATGW1IPv6": {
-            "Properties": {
-                "DestinationIpv6CidrBlock": "::/0",
-                "EgressOnlyInternetGatewayId": {
-                    "Ref": "EgressGateway"
-                },
-                "RouteTableId": {
-                    "Ref": "InternalRT1"
-                }
-            },
-            "Type": "AWS::EC2::Route"
-        },
-        "RouteNATGW2": {
-            "Properties": {
-                "DestinationCidrBlock": "0.0.0.0/0",
-                "NatGatewayId": {
-                    "Ref": "NATGW2"
-                },
-                "RouteTableId": {
-                    "Ref": "InternalRT2"
-                }
-            },
-            "Type": "AWS::EC2::Route"
-        },
-        "RouteNATGW2IPv6": {
-            "Properties": {
-                "DestinationIpv6CidrBlock": "::/0",
-                "EgressOnlyInternetGatewayId": {
-                    "Ref": "EgressGateway"
-                },
-                "RouteTableId": {
-                    "Ref": "InternalRT2"
-                }
-            },
-            "Type": "AWS::EC2::Route"
-        },
-        "RouteNATGW3": {
-            "Properties": {
-                "DestinationCidrBlock": "0.0.0.0/0",
-                "NatGatewayId": {
-                    "Ref": "NATGW3"
-                },
-                "RouteTableId": {
-                    "Ref": "InternalRT3"
-                }
-            },
-            "Type": "AWS::EC2::Route"
-        },
-        "RouteNATGW3IPv6": {
-            "Properties": {
-                "DestinationIpv6CidrBlock": "::/0",
-                "EgressOnlyInternetGatewayId": {
-                    "Ref": "EgressGateway"
-                },
-                "RouteTableId": {
-                    "Ref": "InternalRT3"
-                }
-            },
-            "Type": "AWS::EC2::Route"
-        },
         "Test1TransitGWAttach": {
             "Properties": {
                 "SubnetIds": [
@@ -2391,6 +2583,14 @@
                     {
                         "Key": "Purpose",
                         "Value": "Gateway Attach 1"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "TransitGatewayId": "tgw-01234567890123456",
@@ -2399,6 +2599,84 @@
                 }
             },
             "Type": "AWS::EC2::TransitGatewayAttachment"
+        },
+        "Test2InternalRT1Internal1": {
+            "DependsOn": [
+                "Test2TransitGWAttach"
+            ],
+            "Properties": {
+                "DestinationCidrBlock": "10.0.0.0/8",
+                "RouteTableId": {
+                    "Ref": "InternalRT1"
+                },
+                "TransitGatewayId": "tgw-98765432109876543"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "Test2InternalRT1Internal2": {
+            "DependsOn": [
+                "Test2TransitGWAttach"
+            ],
+            "Properties": {
+                "DestinationCidrBlock": "192.168.0.0/16",
+                "RouteTableId": {
+                    "Ref": "InternalRT1"
+                },
+                "TransitGatewayId": "tgw-98765432109876543"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "Test2InternalRT2Internal1": {
+            "DependsOn": [
+                "Test2TransitGWAttach"
+            ],
+            "Properties": {
+                "DestinationCidrBlock": "10.0.0.0/8",
+                "RouteTableId": {
+                    "Ref": "InternalRT2"
+                },
+                "TransitGatewayId": "tgw-98765432109876543"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "Test2InternalRT2Internal2": {
+            "DependsOn": [
+                "Test2TransitGWAttach"
+            ],
+            "Properties": {
+                "DestinationCidrBlock": "192.168.0.0/16",
+                "RouteTableId": {
+                    "Ref": "InternalRT2"
+                },
+                "TransitGatewayId": "tgw-98765432109876543"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "Test2InternalRT3Internal1": {
+            "DependsOn": [
+                "Test2TransitGWAttach"
+            ],
+            "Properties": {
+                "DestinationCidrBlock": "10.0.0.0/8",
+                "RouteTableId": {
+                    "Ref": "InternalRT3"
+                },
+                "TransitGatewayId": "tgw-98765432109876543"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "Test2InternalRT3Internal2": {
+            "DependsOn": [
+                "Test2TransitGWAttach"
+            ],
+            "Properties": {
+                "DestinationCidrBlock": "192.168.0.0/16",
+                "RouteTableId": {
+                    "Ref": "InternalRT3"
+                },
+                "TransitGatewayId": "tgw-98765432109876543"
+            },
+            "Type": "AWS::EC2::Route"
         },
         "Test2TransitGWAttach": {
             "Properties": {
@@ -2421,6 +2699,14 @@
                     {
                         "Key": "Purpose",
                         "Value": "Gateway Attach 2"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "TransitGatewayId": "tgw-98765432109876543",
@@ -2484,6 +2770,14 @@
                     {
                         "Key": "Name",
                         "Value": "VPCEndpoint"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "PRIVATE-EGRESS-VPC"
+                    },
+                    {
+                        "Key": "Template",
+                        "Value": "VPC for private endpoints egress only"
                     }
                 ],
                 "VpcId": {

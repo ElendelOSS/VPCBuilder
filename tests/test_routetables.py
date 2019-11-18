@@ -18,10 +18,13 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
     def test_base_routetable_object(self):
         resources = {}
         outputs = {}
+        parameters = {
+            "VGW": "vgw-06bbcf429c1cb0eed",
+        }
         properties = yaml.load("""\
             CIDR: 172.16.0.0/20
             Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
-            Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}
+            Tags: {Template: VPC for private endpoints egress only, "info:environment": Staging, "info:owner": Versent}
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             RouteTables:
                 PublicRT:
@@ -34,7 +37,7 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
                 InternalRT1:
                 InternalRT2:
                 InternalRT3:
-        """)
+        """, Loader=yaml.FullLoader)
         expected = {
             'InternalRT2': {
                 'Type': 'AWS::EC2::RouteTable',
@@ -42,10 +45,24 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'InternalRT2',
-                        'Key': 'Name'
-                    }]
+                    'Tags': [
+                        {
+                            'Value': 'InternalRT2',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ]
                 }
             },
             'PublicRouteIPv6': {
@@ -90,10 +107,24 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'InternalRT1',
-                        'Key': 'Name'
-                    }]
+                    'Tags': [
+                        {
+                            'Value': 'InternalRT1',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ]
                 }
             },
             'InternalRT3RoutePropagation': {
@@ -114,10 +145,24 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'PublicRT',
-                        'Key': 'Name'
-                    }]
+                    'Tags': [
+                        {
+                            'Value': 'PublicRT',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ]
                 }
             },
             'PublicRTRoutePropagation': {
@@ -138,10 +183,24 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
                     'VpcId': {
                         'Ref': 'PRIVATEEGRESSVPC'
                     },
-                    'Tags': [{
-                        'Value': 'InternalRT3',
-                        'Key': 'Name'
-                    }]
+                    'Tags': [
+                        {
+                            'Value': 'InternalRT3',
+                            'Key': 'Name'
+                        },
+                        {
+                            "Key": "Template",
+                            "Value": "VPC for private endpoints egress only"
+                        },
+                        {
+                            "Key": "info:environment",
+                            "Value": "Staging"
+                        },
+                        {
+                            "Key": "info:owner",
+                            "Value": "Versent"
+                        }
+                    ]
                 }
             },
             'InternalRT2RoutePropagation': {
@@ -157,5 +216,5 @@ class TestVPCBuilderRouteTables(TestVPCBuilderRouteTablesSetup):
                 'DependsOn': ['VPCGatewayAttachment']
             }
         }
-        actual, outputs = src.macro.buildRouteTables(properties, resources, outputs)
+        actual, outputs = src.macro.buildRouteTables(properties, resources, outputs, parameters)
         self.assertEquals(expected, actual)

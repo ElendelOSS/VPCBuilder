@@ -1,11 +1,10 @@
 kombustion.yaml
 *.zip
-*.__pycache__
-__pycache__
-.cache
-*~
 *.pyc
+*~
 *.swp
+.cache
+__pycache__
 .coverage
 coverage*
 tests/.coverage
@@ -13,3 +12,6 @@ tests/__pycache__/*
 tests/.cache/*
 .vscode/*
 .DS_Store
+build/*
+.idea/
+

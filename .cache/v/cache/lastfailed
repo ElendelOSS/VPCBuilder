@@ -1,3 +1,10 @@
 {
-  "tests/test_functions.py::TestVPCBuilderFunctions::test_isIPV6Cidr_defaultroute": true
+  "tests/test_functions.py::TestVPCBuilderFunctions::test_isIPV6Cidr_defaultroute": true,
+  "tests/test_natgateways.py::TestVPCBuilderNATGateway::test_base_natgw_object": true,
+  "tests/test_natgateways.py::TestVPCBuilderNATGateway::test_multi_routetable_natgw_object": true,
+  "tests/test_networkacls.py::TestVPCBuilderNetworkACL::test_base_networkacl_object": true,
+  "tests/test_routetables.py::TestVPCBuilderRouteTables::test_base_routetable_object": true,
+  "tests/test_subnets.py::TestVPCBuilderSubnets::test_base_subnets_object": true,
+  "tests/test_transitgateways.py::TestVPCBuilderTransitGateway::test_base_transitgw_object": true,
+  "tests/test_vpcendpoints.py::TestVPCBuilderVPCEndpoint::test_base_vpcendpoint_object": true
 }

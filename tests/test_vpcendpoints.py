@@ -21,7 +21,7 @@ class TestVPCBuilderVPCEndpoint(TestVPCBuilderVPCEndpointSetup):
         properties = yaml.load("""\
             CIDR: 172.16.0.0/20
             Details: {VPCName: PRIVATEEGRESSVPC, VPCDesc: Private Egress VPC, Region: ap-southeast-2, IPv6: True}
-            Tags: {Name: PRIVATE-EGRESS-VPC, Template: VPC for private endpoints egress only}
+            Tags: {Template: VPC for private endpoints egress only, "info:environment": Staging, "info:owner": Versent}
             DHCP: {Name: DhcpOptions, DNSServers: 172.16.0.2, NTPServers: 169.254.169.123, NTBType: 2}
             Endpoints:
                 cloudformation:
@@ -51,7 +51,7 @@ class TestVPCBuilderVPCEndpoint(TestVPCBuilderVPCEndpointSetup):
                                 }
                             ]
                         }
-        """)
+        """, Loader=yaml.FullLoader)
         expected = {
             'dynamodbEndPoint': {
                 'Type': 'AWS::EC2::VPCEndpoint',
@@ -103,5 +103,5 @@ class TestVPCBuilderVPCEndpoint(TestVPCBuilderVPCEndpointSetup):
                 }
             }
         }
-        actual, outputs = src.macro.buildVPCEndpoints(properties, resources, outputs)
+        actual, outputs = src.macro.buildVPCEndpoints(properties, resources, outputs, parameters={})
         self.assertEquals(expected, actual)
