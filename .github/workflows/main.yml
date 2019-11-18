@@ -10,9 +10,9 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 1
+      max-parallel: 2
       matrix:
-        python-version: [2.7]
+        python-version: [3.6, 3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -29,7 +29,7 @@ jobs:
         pytest --cov=src --cov-report term-missing
     - name: Lint with pycodestyle
       run: |
-        pycodestyle --ignore=E501 .
+        pycodestyle --ignore=E501,W605 .
     - name: Build SAM Package
       uses: chriscoffee/sam-github-actions@master
       env:
