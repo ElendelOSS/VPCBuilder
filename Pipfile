@@ -23,6 +23,7 @@ urllib3 = "==1.24.2"
 requests = "==2.21.0"
 boto3 = ">=1.9.86"
 botocore = ">=1.12.86"
+awacs = "*"
 
 [requires]
 python_version = "3.6"

@@ -1,0 +1,2 @@
+class requiredfielderror(Exception):
+    pass

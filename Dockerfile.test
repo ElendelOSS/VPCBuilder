@@ -1,4 +1,4 @@
-FROM python:3.7.2-alpine3.9 as TestBench
+FROM python:3.9.6-alpine3.14 as TestBench
 ENV http_proxy ${http_proxy}
 ENV https_proxy ${https_proxy}
 

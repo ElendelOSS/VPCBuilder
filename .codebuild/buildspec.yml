@@ -1,15 +1,46 @@
 version: 0.2
 
+env:
+  variables:
+    VAR_Owner: ElendelOSS
+    VAR_AppName: VPCBuilder
+    VAR_OAuthSecret: arn:aws:secretsmanager:ap-southeast-2:012345678901:secret:github/token
+
 phases:
   install:
+    runtime-versions:
+      python: 3.9
     commands:
+      # Install all the test packages
+      - apt update
+      - apt install -y wget zip jq
+      - pip install --upgrade pip
+      - pip install --upgrade setuptools
+      - pip install --user aws-sam-cli
+      - USER_BASE_PATH=$(python -m site --user-base)
+      - export PATH=$PATH:$USER_BASE_PATH/bin
+      - pip install pipenv
+      - pipenv lock --clear
+      - pipenv lock -r --dev > requirements_test.txt
       - pip install -r requirements_test.txt
     finally:
-      - command
-      - command
-  pre_build:
+      - printenv
+
+  pre_build:  
     commands:
-      - pytest --cov=src
-      - pycodestyle --ignore=E501 .
+      - pytest --cov=src --cov-report term-missing
+      - flake8 ./src --ignore=E501,E402,Q000
+      # Discover and run unit tests in the 'tests' directory. For more information, see <https://docs.python.org/3/library/unittest.html#test-discovery>
+        
+  build:
+    commands:
+      - sam build -t .sam/transform.yaml -m ./requirements.txt -b ./build -s .
     finally:
-      - coveralls
+      - export TAG=v.$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - cd ./build && zip -r9 $TAG.$VAR_AppName.zip * && cd ..
+      - ls ./build/$TAG.$VAR_AppName.zip
+
+  post_build:
+    commands:
+      - export AUTH=$(aws secretsmanager get-secret-value --secret-id $VAR_OAuthSecret | jq -r '.SecretString' | jq -r '.OAuthKey')
+      - invoke pushRelease $VAR_Owner $VAR_AppName $TAG $CODEBUILD_RESOLVED_SOURCE_VERSION $AUTH
