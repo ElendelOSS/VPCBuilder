@@ -1,0 +1,1075 @@
+{
+    "requestId": "508122ef-6442-46eb-b2fc-5fab1f4f7064",
+    "status": "success",
+    "fragment": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Resources": {
+        "PRIVATEEGRESSVPC": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+            "CidrBlock": "172.16.0.0/20",
+            "EnableDnsHostnames": "true",
+            "EnableDnsSupport": "true",
+            "InstanceTenancy": "default",
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "PRIVATEEGRESSVPC"
+              }
+            ]
+          }
+        },
+        "IPv6Block": {
+          "Type": "AWS::EC2::VPCCidrBlock",
+          "Properties": {
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            },
+            "AmazonProvidedIpv6CidrBlock": "true"
+          }
+        },
+        "EgressGateway": {
+          "Type": "AWS::EC2::EgressOnlyInternetGateway",
+          "Properties": {
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            }
+          }
+        },
+        "DhcpOptions": {
+          "Type": "AWS::EC2::DHCPOptions",
+          "Properties": {
+            "DomainName": {
+              "Ref": "AWS::NoValue"
+            },
+            "DomainNameServers": [
+              "172.16.0.2"
+            ],
+            "NtpServers": [
+              "169.254.169.123"
+            ],
+            "NetbiosNameServers": {
+              "Ref": "AWS::NoValue"
+            },
+            "NetbiosNodeType": 2,
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "DhcpOptions"
+              }
+            ]
+          }
+        },
+        "DhcpOptionsAssociation": {
+          "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+          "Properties": {
+            "DhcpOptionsId": {
+              "Ref": "DhcpOptions"
+            },
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            }
+          }
+        },
+        "InternetGateway": {
+          "Type": "AWS::EC2::InternetGateway",
+          "Properties": {
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "InternetGateway"
+              }
+            ]
+          }
+        },
+        "IGWVPCGatewayAttachment": {
+          "Type": "AWS::EC2::VPCGatewayAttachment",
+          "Properties": {
+            "InternetGatewayId": {
+              "Ref": "InternetGateway"
+            },
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            }
+          }
+        },
+        "ReservedMgmt1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.0.0/26",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "ReservedMgmt1"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "ReservedMgmt1SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT1"
+              },
+              "SubnetId": {
+                "Ref": "ReservedMgmt1"
+              }
+            }
+          },
+          "ReservedMgmt1SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "ReservedMgmt1"
+              }
+            }
+          },
+          "ReservedMgmt2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.1.0/26",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "ReservedMgmt2"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "ReservedMgmt2SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT2"
+              },
+              "SubnetId": {
+                "Ref": "ReservedMgmt2"
+              }
+            }
+          },
+          "ReservedMgmt2SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "ReservedMgmt2"
+              }
+            }
+          },
+          "ReservedMgmt3": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.2.0/26",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "ReservedMgmt3"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "ReservedMgmt3SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT3"
+              },
+              "SubnetId": {
+                "Ref": "ReservedMgmt3"
+              }
+            }
+          },
+          "ReservedMgmt3SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "ReservedMgmt3"
+              }
+            }
+          },
+          "Internal1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.3.0/24",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "Internal1"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  6,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "Internal1SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT1"
+              },
+              "SubnetId": {
+                "Ref": "Internal1"
+              }
+            }
+          },
+          "Internal1SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "Internal1"
+              }
+            }
+          },
+          "Internal2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.4.0/24",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "Internal2"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  7,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "Internal2SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT2"
+              },
+              "SubnetId": {
+                "Ref": "Internal2"
+              }
+            }
+          },
+          "Internal2SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "Internal2"
+              }
+            }
+          },
+          "Internal3": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.5.0/24",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "Internal3"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  8,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "Internal3SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT3"
+              },
+              "SubnetId": {
+                "Ref": "Internal3"
+              }
+            }
+          },
+          "Internal3SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "Internal3"
+              }
+            }
+          },
+          "ReservedNet3": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.2.192/26",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "ReservedNet3"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  9,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "ReservedNet3SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "PublicRT"
+              },
+              "SubnetId": {
+                "Ref": "ReservedNet3"
+              }
+            }
+          },
+          "ReservedNet3SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "RestrictedSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "ReservedNet3"
+              }
+            }
+          },
+          "ReservedNet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.1.192/26",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "ReservedNet2"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  10,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "ReservedNet2SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "PublicRT"
+              },
+              "SubnetId": {
+                "Ref": "ReservedNet2"
+              }
+            }
+          },
+          "ReservedNet2SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "RestrictedSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "ReservedNet2"
+              }
+            }
+          },
+          "ReservedNet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.0.192/26",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "ReservedNet1"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  11,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "ReservedNet1SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "PublicRT"
+              },
+              "SubnetId": {
+                "Ref": "ReservedNet1"
+              }
+            }
+          },
+          "ReservedNet1SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "RestrictedSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "ReservedNet1"
+              }
+            }
+          },
+          "PerimeterInternal1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  0,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.6.0/24",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "PerimeterInternal1"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  3,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "PerimeterInternal1SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT1"
+              },
+              "SubnetId": {
+                "Ref": "PerimeterInternal1"
+              }
+            }
+          },
+          "PerimeterInternal1SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "PerimeterInternal1"
+              }
+            }
+          },
+          "PerimeterInternal2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  1,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.7.0/24",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "PerimeterInternal2"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  4,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "PerimeterInternal2SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT2"
+              },
+              "SubnetId": {
+                "Ref": "PerimeterInternal2"
+              }
+            }
+          },
+          "PerimeterInternal2SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "PerimeterInternal2"
+              }
+            }
+          },
+          "PerimeterInternal3": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+              "AvailabilityZone": {
+                "Fn::Select": [
+                  2,
+                  {
+                    "Fn::GetAZs": ""
+                  }
+                ]
+              },
+              "CidrBlock": "172.16.8.0/24",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "PerimeterInternal3"
+                }
+              ],
+              "VpcId": {
+                "Ref": "PRIVATEEGRESSVPC"
+              },
+              "AssignIpv6AddressOnCreation": "true",
+              "Ipv6CidrBlock": {
+                "Fn::Select": [
+                  5,
+                  {
+                    "Fn::Cidr": [
+                      {
+                        "Fn::Select": [
+                          0,
+                          {
+                            "Fn::GetAtt": [
+                              "PRIVATEEGRESSVPC",
+                              "Ipv6CidrBlocks"
+                            ]
+                          }
+                        ]
+                      },
+                      12,
+                      64
+                    ]
+                  }
+                ]
+              }
+            },
+            "DependsOn": "IPv6Block"
+          },
+          "PerimeterInternal3SubnetRoutetableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+              "RouteTableId": {
+                "Ref": "InternalRT3"
+              },
+              "SubnetId": {
+                "Ref": "PerimeterInternal3"
+              }
+            }
+          },
+          "PerimeterInternal3SubnetNetworkACLAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+              "NetworkAclId": {
+                "Ref": "InternalSubnetAcl"
+              },
+              "SubnetId": {
+                "Ref": "PerimeterInternal3"
+              }
+            }
+          }
+      },
+      "Description": "Private VPC Template",
+      "Parameters": {},
+      "Mappings": {},
+      "Outputs": {
+        "PRIVATEEGRESSVPC": {
+          "Description": "PRIVATEEGRESSVPC",
+          "Value": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "Export": {
+            "Name": {
+              "Fn::Sub": "${AWS::StackName}-VPCid"
+            }
+          }
+        },
+        "ReservedMgmt1": {
+            "Description": "ReservedMgmt1",
+            "Value": {
+              "Ref": "ReservedMgmt1"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-ReservedMgmt1"
+              }
+            }
+          },
+          "ReservedMgmt2": {
+            "Description": "ReservedMgmt2",
+            "Value": {
+              "Ref": "ReservedMgmt2"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-ReservedMgmt2"
+              }
+            }
+          },
+          "ReservedMgmt3": {
+            "Description": "ReservedMgmt3",
+            "Value": {
+              "Ref": "ReservedMgmt3"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-ReservedMgmt3"
+              }
+            }
+          },
+          "Internal1": {
+            "Description": "Internal1",
+            "Value": {
+              "Ref": "Internal1"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-Internal1"
+              }
+            }
+          },
+          "Internal2": {
+            "Description": "Internal2",
+            "Value": {
+              "Ref": "Internal2"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-Internal2"
+              }
+            }
+          },
+          "Internal3": {
+            "Description": "Internal3",
+            "Value": {
+              "Ref": "Internal3"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-Internal3"
+              }
+            }
+          },
+          "ReservedNet3": {
+            "Description": "ReservedNet3",
+            "Value": {
+              "Ref": "ReservedNet3"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-ReservedNet3"
+              }
+            }
+          },
+          "ReservedNet2": {
+            "Description": "ReservedNet2",
+            "Value": {
+              "Ref": "ReservedNet2"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-ReservedNet2"
+              }
+            }
+          },
+          "ReservedNet1": {
+            "Description": "ReservedNet1",
+            "Value": {
+              "Ref": "ReservedNet1"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-ReservedNet1"
+              }
+            }
+          },
+          "PerimeterInternal1": {
+            "Description": "PerimeterInternal1",
+            "Value": {
+              "Ref": "PerimeterInternal1"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-PerimeterInternal1"
+              }
+            }
+          },
+          "PerimeterInternal2": {
+            "Description": "PerimeterInternal2",
+            "Value": {
+              "Ref": "PerimeterInternal2"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-PerimeterInternal2"
+              }
+            }
+          },
+          "PerimeterInternal3": {
+            "Description": "PerimeterInternal3",
+            "Value": {
+              "Ref": "PerimeterInternal3"
+            },
+            "Export": {
+              "Name": {
+                "Fn::Sub": "${AWS::StackName}-Subnet-PerimeterInternal3"
+              }
+            }
+          }
+      }
+    }
+  }
+  

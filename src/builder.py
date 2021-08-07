@@ -106,6 +106,7 @@ class builder():
         self.logger.debug('Calling Build All Function')
         self.logger.debug('Calling Build VPC Baseline')
         self.build_baseline()
+        self.build_subnets()
 
     def build_baseline(self):
         try:
@@ -120,9 +121,9 @@ class builder():
                 )
             )
         except AssertionError as e:
-            self.logger.error("Failure to add VPC resource")
+            self.logger.error(f"Failure to add VPC resource")
         else:
-            self.logger.debug("Successfully added VPC resource")
+            self.logger.debug(f"Successfully added VPC resource")
 
         try:
             self.template.add_output(
@@ -136,9 +137,9 @@ class builder():
                 )
             )
         except AssertionError as e:
-            self.logger.error("Failure to add VPC output")
+            self.logger.error(f"Failure to add VPC output")
         else:
-            self.logger.debug("Successfully added VPC output")
+            self.logger.debug(f"Successfully added VPC output")
 
         try:
             self.template.add_resource(
@@ -153,9 +154,9 @@ class builder():
                 )
             )
         except AssertionError as e:
-            self.logger.error("Failure to add DHCP resource")
+            self.logger.error(f"Failure to add DHCP resource")
         else:
-            self.logger.debug("Successfully added DHCP resource")
+            self.logger.debug(f"Successfully added DHCP resource")
 
         try:
             self.template.add_resource(
@@ -166,9 +167,9 @@ class builder():
                 )
             )
         except AssertionError as e:
-            self.logger.error("Failure to add DHCP Association resource")
+            self.logger.error(f"Failure to add DHCP Association resource")
         else:
-            self.logger.debug("Successfully added DHCP Association resource")
+            self.logger.debug(f"Successfully added DHCP Association resource")
 
         try:
             self.template.add_resource(
@@ -178,9 +179,9 @@ class builder():
                 )
             )
         except AssertionError as e:
-            self.logger.error("Failure to add Internet Gateway resource")
+            self.logger.error(f"Failure to add Internet Gateway resource")
         else:
-            self.logger.debug("Successfully added Internet Gateway resource")
+            self.logger.debug(f"Successfully added Internet Gateway resource")
 
         try:
             self.template.add_resource(
@@ -191,9 +192,9 @@ class builder():
                 )
             )
         except AssertionError as e:
-            self.logger.error("Failure to add Internet Gateway Attachment resource")
+            self.logger.error(f"Failure to add Internet Gateway Attachment resource")
         else:
-            self.logger.debug("Successfully added Internet Gateway Attachment resource")
+            self.logger.debug(f"Successfully added Internet Gateway Attachment resource")
 
         if self.properties.get("Details", {}).get("IPv6", None):
             try:
@@ -212,38 +213,48 @@ class builder():
                     )
                 )
             except AssertionError as e:
-                self.logger.error("Failure to add IPv6 Block resource")
+                self.logger.error(f"Failure to add IPv6 Block resource")
             else:
-                self.logger.debug("Successfully added IPv6 Block resource")
+                self.logger.debug(f"Successfully added IPv6 Block resource")
 
 
     def build_vpc_endpoints(self):
         for endpoint, details in self.properties.get("Endpoints", {}).items():
-            self.template.add_resource(
-                VPCEndpoint(
-                    f"{endpoint.replace(',','').replace('.','')}",
-                    ServiceName=Join("", ["com.amazonaws.", {"Ref": "AWS::Region"}, ".", endpoint]),
-                    VpcEndpointType=vpc_endpoint_type(details.get('Type')),
-                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
-                    PolicyDocument=details.get('PolicyDocument', NoValue),
-                    RouteTableIds=details.get('RouteTableIds') if details.get('Type') == "Gateway" else NoValue,
-                    SecurityGroupIds=details.get('SecurityGroupIds') if details.get('Type') == "Interface" else NoValue,
-                    SubnetIds=details.get('SubnetIds')
+            try:
+                self.template.add_resource(
+                    VPCEndpoint(
+                        f"{endpoint.replace(',','').replace('.','')}",
+                        ServiceName=Join("", ["com.amazonaws.", {"Ref": "AWS::Region"}, ".", endpoint]),
+                        VpcEndpointType=vpc_endpoint_type(details.get('Type')),
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
+                        PolicyDocument=details.get('PolicyDocument', NoValue),
+                        RouteTableIds=details.get('RouteTableIds') if details.get('Type') == "Gateway" else NoValue,
+                        SecurityGroupIds=details.get('SecurityGroupIds') if details.get('Type') == "Interface" else NoValue,
+                        SubnetIds=details.get('SubnetIds')
+                    )
                 )
-            )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add VPC Endpoint {endpoint.replace(',','').replace('.','')} resource")
+            else:
+                self.logger.debug(f"Successfully added VPC Endpoint {endpoint.replace(',','').replace('.','')} resource")
 
     def build_securitygroup(self):
         for secgroup, details in self.properties.get("SecurityGroups", {}).items():
-            self.template.add_resource(
-                SecurityGroup(
-                    f"{secgroup}",
-                    GroupName=secgroup,
-                    GroupDescription=details.get("GroupDescription", f"{secgroup} Security Group"),
-                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
-                    Tags=Tags(details.get("Tags")),
-                    SecurityGroupEgress=build_security_group_rules(details.get('SecurityGroupEgress', []))
+            try:
+                self.template.add_resource(
+                    SecurityGroup(
+                        f"{secgroup}",
+                        GroupName=secgroup,
+                        GroupDescription=details.get("GroupDescription", f"{secgroup} Security Group"),
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
+                        Tags=Tags(self.build_troposphere_tags(f"{secgroup}", self.properties.get("Tags", {}))),
+                        SecurityGroupEgress=build_security_group_rules(details.get('SecurityGroupEgress', []))
+                    )
                 )
-            )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add Security Group {secgroup} resource")
+            else:
+                self.logger.debug(f"Successfully added Security Group {secgroup} resource")
              
     def build_security_group_rules(self, group_rules: list):
         rules_list: list = []
@@ -262,168 +273,205 @@ class builder():
     
     def build_nat_gateway(self):
         for natgw, details in self.properties.get("NATGateways", {}).items():
-            self.template.add_resource(
-                EIP(
-                    f"EIP{natgw}",
-                    Domain="VPC"
-                )
-            )
-
-            self.template.add_resource(
-                NatGateway(
-                    f"{natgw}",
-                    AllocationId=GetAtt(f"EIP{natgw}", "AllocationId"),
-                    SubnetId=Ref(details.get("Subnet")),
-                    Tags=Tags(details.get("Tags"))
-                )
-            )
-
-            self.template.add_output(
-                f"{natgw}",
-                Description=f"{natgw}",
-                Value=Ref(f"{natgw}"),
-                Export=Export(
-                    Sub(f"${{AWS::StackName}}-NATGW-{natgw}")
-                )
-            )
-
-            for routetable in details.get("RouteTable", []):
+            try:
                 self.template.add_resource(
-                    Route(
-                        f"{routetable}{natgw}",
-                        DestinationCidrBlock="0.0.0.0/0",
-                        NatGatewayId=Ref(natgw),
-                        RouteTableId=Ref(routetable)
+                    EIP(
+                        f"EIP{natgw}",
+                        Domain="VPC"
                     )
                 )
 
-                if self.properties.get("Details", {}).get("IPv6", None):
+                self.template.add_resource(
+                    NatGateway(
+                        f"{natgw}",
+                        AllocationId=GetAtt(f"EIP{natgw}", "AllocationId"),
+                        SubnetId=Ref(details.get("Subnet")),
+                        Tags=Tags(self.build_troposphere_tags(f"{natgw}", self.properties.get("Tags", {})))
+                    )
+                )
+            
+                self.template.add_output(
+                    Output(
+                        f"{natgw}",
+                        Description=f"{natgw}",
+                        Value=Ref(f"{natgw}"),
+                        Export=Export(
+                            Sub(f"${{AWS::StackName}}-NATGW-{natgw}")
+                        )
+                    )
+                )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add NAT Gateway {natgw} resource")
+            else:
+                self.logger.debug(f"Successfully added NAT Gateway {natgw} resource")
+
+            try:
+                for routetable in details.get("RouteTable", []):
                     self.template.add_resource(
                         Route(
-                            f"{routetable}{natgw}IPv6",
-                            DestinationCidrBlock="::/0",
-                            EgressOnlyInternetGatewayId=Ref("EgressGateway"),
+                            f"{routetable}{natgw}",
+                            DestinationCidrBlock="0.0.0.0/0",
+                            NatGatewayId=Ref(natgw),
                             RouteTableId=Ref(routetable)
                         )
                     )
+
+                    if self.properties.get("Details", {}).get("IPv6", None):
+                        self.template.add_resource(
+                            Route(
+                                f"{routetable}{natgw}IPv6",
+                                DestinationCidrBlock="::/0",
+                                EgressOnlyInternetGatewayId=Ref("EgressGateway"),
+                                RouteTableId=Ref(routetable)
+                            )
+                        )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add Default Route for NAT Gateway {natgw} resource")
+            else:
+                self.logger.debug(f"Successfully added Default Route for NAT Gateway {natgw} resource")
+
     
     def build_network_acls(self):
         for networkacl, details in self.properties.get("NetworkACLs", {}).items:
-            self.template.add_resource(
-                NetworkAcl(
-                    f"{networkacl}",
-                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
-                    Tags=Tags(details.get("Tags"))
-                )
-            )
-
-            for acl_name, acl_detail in networkacl.items():
-                acl_detail_list = acl_detail.split(',')
+            try:
                 self.template.add_resource(
-                    NetworkAclEntry(
-                        f"{acl_name}",
-                        CidrBlock=acl_detail_list[4],
-                        Egress=acl_detail_list[3],
-                        NetworkAclId=Ref(networkacl),
-                        PortRange=PortRange(
-                            From=acl_detail_list[5],
-                            To=acl_detail_list[6]
-                        ),
-                        Protocol=acl_detail_list[1],
-                        RuleAction=acl_detail_list[2],
-                        RuleNumber=acl_detail_list[0]
+                    NetworkAcl(
+                        f"{networkacl}",
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
+                        Tags=Tags(self.build_troposphere_tags(f"{networkacl}", self.properties.get("Tags", {})))
                     )
                 )
 
-            self.template.add_output(
-                f"{networkacl}",
-                Description=f"{networkacl}",
-                Value=Ref(f"{networkacl}"),
-                Export=Export(
-                    Sub(f"${{AWS::StackName}}-NACL-{networkacl}")
+                for acl_name, acl_detail in networkacl.items():
+                    acl_detail_list = acl_detail.split(',')
+                    self.template.add_resource(
+                        NetworkAclEntry(
+                            f"{acl_name}",
+                            CidrBlock=acl_detail_list[4],
+                            Egress=acl_detail_list[3],
+                            NetworkAclId=Ref(networkacl),
+                            PortRange=PortRange(
+                                From=acl_detail_list[5],
+                                To=acl_detail_list[6]
+                            ),
+                            Protocol=acl_detail_list[1],
+                            RuleAction=acl_detail_list[2],
+                            RuleNumber=acl_detail_list[0]
+                        )
+                    )
+
+                self.template.add_output(
+                    Output(
+                        f"{networkacl}",
+                        Description=f"{networkacl}",
+                        Value=Ref(f"{networkacl}"),
+                        Export=Export(
+                            Sub(f"${{AWS::StackName}}-NACL-{networkacl}")
+                        )
+                    )
                 )
-            )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add Network ACL {networkacl} resource")
+            else:
+                self.logger.debug(f"Successfully added Network ACL {networkacl} resource")
     
     def build_subnets(self):
-        subnet_count: int = 0
-        for subnet, details in self.properties.get("Subnet", {}).items:
-
-            self.template.add_resource(
-                Subnet(
-                    f"{subnet}",
-                    AssignIpv6AddressOnCreation=True if "IPv6" in self.properties("Details", {}) else False,
-                    AvailabilityZone=Select(details.get("AZ", 0), GetAZs()),
-                    CidrBlock=details.get("CIDR"),
-                    Ipv6CidrBlock=Select(details.get("IPv6Iter"), Cidr(Select(0, GetAtt(f"{self.properties['Details']['VPCName']}", "Ipv6CidrBlocks")) ,subnet_count, 64)) if "IPv6" in self.properties("Details", {}) else NoValue,
-                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
-                    Tags=Tags(details.get("Tags"))
+        subnet_count: int = len(self.properties.get("Subnets", {}).keys())
+        for subnet, details in self.properties.get("Subnets", {}).items():
+            try:
+                self.template.add_resource(
+                    Subnet(
+                        f"{subnet}",
+                        AssignIpv6AddressOnCreation='True' if "IPv6" in self.properties.get("Details", NoValue) else 'False',
+                        AvailabilityZone=Select(details.get("AZ", 0), GetAZs()),
+                        CidrBlock=details.get("CIDR"),
+                        Ipv6CidrBlock=Select(details.get("IPv6Iter"), Cidr(Select(0, GetAtt(f"{self.properties['Details']['VPCName']}", "Ipv6CidrBlocks")) ,subnet_count, 64)) if "IPv6" in self.properties.get("Details", {}) else NoValue,
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
+                        Tags=Tags(self.build_troposphere_tags(f"{subnet}", self.properties.get("Tags", {}))),
+                        DependsOn='IPv6Block' if "IPv6" in self.properties.get("Details", NoValue) else ''
+                    )
                 )
-            )
 
-            self.template.add_resource(
-                SubnetRoutetableAssociation(
-                    f"{subnet}SubnetRoutetableAssociation",
-                    RouteTableId=details.get("RouteTable"),
-                    SubnetId=subnet
+                self.template.add_resource(
+                    SubnetRouteTableAssociation(
+                        f"{subnet}SubnetRoutetableAssociation",
+                        RouteTableId=Ref(details.get("RouteTable")),
+                        SubnetId=Ref(subnet)
+                    )
                 )
-            )
 
-            self.template.add_resource(
-                SubnetNetworkAclAssociation(
-                    f"{subnet}SubnetNetworkACLAssociation",
-                    NetworkAclId=details.get("NetACL"),
-                    SubnetId=subnet
+                self.template.add_resource(
+                    SubnetNetworkAclAssociation(
+                        f"{subnet}SubnetNetworkACLAssociation",
+                        NetworkAclId=Ref(details.get("NetACL")),
+                        SubnetId=Ref(subnet)
+                    )
                 )
-            )
 
-            self.template.add_output(
-                f"{subnet}",
-                Description=f"{subnet}",
-                Value=Ref(f"{subnet}"),
-                Export=Export(
-                    Sub(f"${{AWS::StackName}}-Subnet-{subnet}")
+                self.template.add_output(
+                    Output(
+                        f"{subnet}",
+                        Description=f"{subnet}",
+                        Value=Ref(f"{subnet}"),
+                        Export=Export(
+                            Sub(f"${{AWS::StackName}}-Subnet-{subnet}")
+                        )
+                    )
                 )
-            )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add Subnet {subnet} resource")
+            else:
+                self.logger.debug(f"Successfully added Subnet {subnet} resource")
     
     def build_route_tables(self):
         for routetable, details in self.properties.get("RouteTables").items:
-            self.template.add_resource(
-                RouteTable(
-                    f"{routetable}",
-                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
-                    Tags=Tags(details.get("Tags"))
+            try:
+                self.template.add_resource(
+                    RouteTable(
+                        f"{routetable}",
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
+                        Tags=Tags(details.get("Tags"))
+                    )
                 )
-            )
 
-            self.template.add_output(
-                f"{routetable}",
-                Description=f"{routetable}",
-                Value=Ref(f"{routetable}"),
-                Export=Export(
-                    Sub(f"${{AWS::StackName}}-RouteTable-{routetable}")
+                self.template.add_output(
+                    f"{routetable}",
+                    Description=f"{routetable}",
+                    Value=Ref(f"{routetable}"),
+                    Export=Export(
+                        Sub(f"${{AWS::StackName}}-RouteTable-{routetable}")
+                    )
                 )
-            )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add Routetable {routetable} resource")
+            else:
+                self.logger.debug(f"Successfully added Routetable {routetable} resource")
 
     def build_transit_gateways(self):
         for tgw, details in self.properties.get("TransitGateway").items:
-            self.template.add_resource(
-                TransitGatewayAttachment(
-                    f"{tgw}TransitGWAttach",
-                    TransitGatewayId=details.get("TransitGatewayId"),
-                    SubnetIds=[Ref(x) for x in details.get("Subnets")],
-                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
-                    Tags=Tags(details.get("Tags"))
-                )
-            )
-
-            for routetable, routes in details.get('RouteTables', {}):
-                for route_dict in routes.items:
-                    self.template.add_resource(
-                        Route(
-                            f"{tgw}{routetable}{details.get('RouteName')}",
-                            RouteTableId=Ref(routetable),
-                            DestinationCidrBlock=route_dict.get('RouteCIDR'),
-                            TransitGatewayId=Ref(tgw),
-                            DependsOn=f"{tgw}TransitGWAttach"
-                        )
+            try:
+                self.template.add_resource(
+                    TransitGatewayAttachment(
+                        f"{tgw}TransitGWAttach",
+                        TransitGatewayId=details.get("TransitGatewayId"),
+                        SubnetIds=[Ref(x) for x in details.get("Subnets")],
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
+                        Tags=Tags(details.get("Tags"))
                     )
+                )
+
+                for routetable, routes in details.get('RouteTables', {}):
+                    for route_dict in routes.items:
+                        self.template.add_resource(
+                            Route(
+                                f"{tgw}{routetable}{details.get('RouteName')}",
+                                RouteTableId=Ref(routetable),
+                                DestinationCidrBlock=route_dict.get('RouteCIDR'),
+                                TransitGatewayId=Ref(tgw),
+                                DependsOn=f"{tgw}TransitGWAttach"
+                            )
+                        )
+            except AssertionError as e:
+                self.logger.error(f"Failure to add Transit Gateway Attachment {tgw} resource")
+            else:
+                self.logger.debug(f"Successfully added Transit Gateway Attachment {tgw} resource")

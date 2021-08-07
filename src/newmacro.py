@@ -33,9 +33,6 @@ def handler(event: dict, context: object) -> Union[dict, Exception]:
                     resources = {**resources, **_template.get('Resources')}
                     outputs = {**outputs, **_template.get('Outputs')}
 
-        logger.debug('Resources:')
-        logger.debug(json.dumps(resources, default=str))
-
         response['Resources'] = resources
         response['Outputs'] = outputs
     except customerror.requiredfielderror as e:
