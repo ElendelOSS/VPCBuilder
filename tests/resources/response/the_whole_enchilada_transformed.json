@@ -1,0 +1,3693 @@
+{
+  "requestId": "508122ef-6442-46eb-b2fc-5fab1f4f7064",
+  "status": "success",
+  "fragment": {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+      "PRIVATEEGRESSVPC": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/20",
+          "EnableDnsHostnames": true,
+          "EnableDnsSupport": true,
+          "InstanceTenancy": "default",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PRIVATEEGRESSVPC"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "IPv6Block": {
+        "Type": "AWS::EC2::VPCCidrBlock",
+        "Properties": {
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AmazonProvidedIpv6CidrBlock": true
+        }
+      },
+      "EgressGateway": {
+        "Type": "AWS::EC2::EgressOnlyInternetGateway",
+        "Properties": {
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "DhcpOptions": {
+        "Type": "AWS::EC2::DHCPOptions",
+        "Properties": {
+          "DomainNameServers": [
+            "172.16.0.2"
+          ],
+          "NtpServers": [
+            "169.254.169.123"
+          ],
+          "NetbiosNodeType": 2,
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "DhcpOptions"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "DhcpOptionsAssociation": {
+        "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+        "Properties": {
+          "DhcpOptionsId": {
+            "Ref": "DhcpOptions"
+          },
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "InternetGateway": {
+        "Type": "AWS::EC2::InternetGateway",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "InternetGateway"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "IGWVPCGatewayAttachment": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "InternetGatewayId": {
+            "Ref": "InternetGateway"
+          },
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "VPCGatewayAttachment": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        }
+      },
+      "VPCFlowLogsRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": [
+                    "vpc-flow-logs.amazonaws.com"
+                  ]
+                },
+                "Action": [
+                  "sts:AssumeRole"
+                ]
+              }
+            ]
+          },
+          "Path": "/",
+          "Policies": [
+            {
+              "PolicyName": "root",
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "logs:*"
+                    ],
+                    "Resource": "arn:aws:logs:*:*:*"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "VPCFlowLogs": {
+        "Type": "AWS::EC2::FlowLog",
+        "Properties": {
+          "DeliverLogsPermissionArn": {
+            "Fn::GetAtt": [
+              "VPCFlowLogsRole",
+              "Arn"
+            ]
+          },
+          "LogGroupName": "FlowLogsGroup",
+          "ResourceId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "ResourceType": "VPC",
+          "TrafficType": "ALL"
+        }
+      },
+      "Test1TransitGWAttach": {
+        "Type": "AWS::EC2::TransitGatewayAttachment",
+        "Properties": {
+          "TransitGatewayId": "tgw-01234567890123456",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "SubnetIds": [
+            {
+              "Ref": "Internal1"
+            },
+            {
+              "Ref": "Internal2"
+            },
+            {
+              "Ref": "Internal3"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC-TGW1"
+            },
+            {
+              "Key": "Purpose",
+              "Value": "Gateway Attach 1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "Test2TransitGWAttach": {
+        "Type": "AWS::EC2::TransitGatewayAttachment",
+        "Properties": {
+          "TransitGatewayId": "tgw-98765432109876543",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "SubnetIds": [
+            {
+              "Ref": "Internal1"
+            },
+            {
+              "Ref": "Internal2"
+            },
+            {
+              "Ref": "Internal3"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC-TGW2"
+            },
+            {
+              "Key": "Purpose",
+              "Value": "Gateway Attach 2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "Test2InternalRT1Internal1": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "10.0.0.0/8",
+          "TransitGatewayId": "tgw-98765432109876543",
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          }
+        },
+        "DependsOn": [
+          "Test2TransitGWAttach"
+        ]
+      },
+      "Test2InternalRT1Internal2": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "192.168.0.0/16",
+          "TransitGatewayId": "tgw-98765432109876543",
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          }
+        },
+        "DependsOn": [
+          "Test2TransitGWAttach"
+        ]
+      },
+      "Test2InternalRT2Internal1": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "10.0.0.0/8",
+          "TransitGatewayId": "tgw-98765432109876543",
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          }
+        },
+        "DependsOn": [
+          "Test2TransitGWAttach"
+        ]
+      },
+      "Test2InternalRT2Internal2": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "192.168.0.0/16",
+          "TransitGatewayId": "tgw-98765432109876543",
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          }
+        },
+        "DependsOn": [
+          "Test2TransitGWAttach"
+        ]
+      },
+      "Test2InternalRT3Internal1": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "10.0.0.0/8",
+          "TransitGatewayId": "tgw-98765432109876543",
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          }
+        },
+        "DependsOn": [
+          "Test2TransitGWAttach"
+        ]
+      },
+      "Test2InternalRT3Internal2": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "192.168.0.0/16",
+          "TransitGatewayId": "tgw-98765432109876543",
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          }
+        },
+        "DependsOn": [
+          "Test2TransitGWAttach"
+        ]
+      },
+      "InternalRT3": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "InternalRT3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "InternalRT3RoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "InternalRT3"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "PublicRT": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PublicRT"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "PublicRTRoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "PublicRT"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "PublicRoute": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "GatewayId": {
+            "Ref": "InternetGateway"
+          },
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          }
+        }
+      },
+      "PublicRouteIPv6": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationIpv6CidrBlock": "::/0",
+          "GatewayId": {
+            "Ref": "InternetGateway"
+          },
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          }
+        }
+      },
+      "InternalRT2": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "InternalRT2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "InternalRT2RoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "InternalRT2"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "InternalRT1": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "InternalRT1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "InternalRT1RoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "InternalRT1"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "ReservedMgmt1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.0.0/26",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "ReservedMgmt1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "ReservedMgmt1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          },
+          "SubnetId": {
+            "Ref": "ReservedMgmt1"
+          }
+        }
+      },
+      "ReservedMgmt1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "ReservedMgmt1"
+          }
+        }
+      },
+      "ReservedMgmt2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.1.0/26",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "ReservedMgmt2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "ReservedMgmt2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          },
+          "SubnetId": {
+            "Ref": "ReservedMgmt2"
+          }
+        }
+      },
+      "ReservedMgmt2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "ReservedMgmt2"
+          }
+        }
+      },
+      "ReservedMgmt3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.2.0/26",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "ReservedMgmt3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "ReservedMgmt3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          },
+          "SubnetId": {
+            "Ref": "ReservedMgmt3"
+          }
+        }
+      },
+      "ReservedMgmt3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "ReservedMgmt3"
+          }
+        }
+      },
+      "Internal1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.3.0/24",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Internal1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              6,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Internal1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          },
+          "SubnetId": {
+            "Ref": "Internal1"
+          }
+        }
+      },
+      "Internal1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Internal1"
+          }
+        }
+      },
+      "Internal2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.4.0/24",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Internal2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              7,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Internal2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          },
+          "SubnetId": {
+            "Ref": "Internal2"
+          }
+        }
+      },
+      "Internal2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Internal2"
+          }
+        }
+      },
+      "Internal3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.5.0/24",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Internal3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              8,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Internal3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          },
+          "SubnetId": {
+            "Ref": "Internal3"
+          }
+        }
+      },
+      "Internal3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Internal3"
+          }
+        }
+      },
+      "ReservedNet3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.2.192/26",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "ReservedNet3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              9,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "ReservedNet3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet3"
+          }
+        }
+      },
+      "ReservedNet3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet3"
+          }
+        }
+      },
+      "ReservedNet2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.1.192/26",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "ReservedNet2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              10,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "ReservedNet2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet2"
+          }
+        }
+      },
+      "ReservedNet2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet2"
+          }
+        }
+      },
+      "ReservedNet1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.0.192/26",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "ReservedNet1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              11,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "ReservedNet1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet1"
+          }
+        }
+      },
+      "ReservedNet1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet1"
+          }
+        }
+      },
+      "PerimeterInternal1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.6.0/24",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PerimeterInternal1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              3,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "PerimeterInternal1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          },
+          "SubnetId": {
+            "Ref": "PerimeterInternal1"
+          }
+        }
+      },
+      "PerimeterInternal1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "PerimeterInternal1"
+          }
+        }
+      },
+      "PerimeterInternal2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.7.0/24",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PerimeterInternal2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              4,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "PerimeterInternal2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          },
+          "SubnetId": {
+            "Ref": "PerimeterInternal2"
+          }
+        }
+      },
+      "PerimeterInternal2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "PerimeterInternal2"
+          }
+        }
+      },
+      "PerimeterInternal3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": "172.16.8.0/24",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PerimeterInternal3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              5,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "PRIVATEEGRESSVPC",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  12,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "PerimeterInternal3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          },
+          "SubnetId": {
+            "Ref": "PerimeterInternal3"
+          }
+        }
+      },
+      "PerimeterInternal3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "PerimeterInternal3"
+          }
+        }
+      },
+      "InternalSubnetAcl": {
+        "Type": "AWS::EC2::NetworkAcl",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "InternalSubnetAcl"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "InternalSubnetAclEntryOutTCPUnreserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 106
+        }
+      },
+      "InternalSubnetAclEntryOutUDPDNSIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 113
+        }
+      },
+      "InternalSubnetAclEntryOutUDPUnreserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 107
+        }
+      },
+      "InternalSubnetAclEntryOut": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1,
+            "To": 65535
+          },
+          "Protocol": -1,
+          "RuleAction": "allow",
+          "RuleNumber": 100
+        }
+      },
+      "InternalSubnetAclEntryOutSSH": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 22,
+            "To": 22
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 150
+        }
+      },
+      "InternalSubnetAclEntryInUDPUnreservedIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 105
+        }
+      },
+      "InternalSubnetAclEntryOutTCPDNSIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 112
+        }
+      },
+      "InternalSubnetAclEntryOutTCPDNS": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 110
+        }
+      },
+      "InternalSubnetAclEntryOutHTTPS": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 443,
+            "To": 443
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 103
+        }
+      },
+      "InternalSubnetAclEntryOutHTTP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 80,
+            "To": 80
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 102
+        }
+      },
+      "InternalSubnetAclEntryOutHTTPIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 80,
+            "To": 80
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 104
+        }
+      },
+      "InternalSubnetAclEntryOutHTTPSIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 443,
+            "To": 443
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 105
+        }
+      },
+      "InternalSubnetAclEntryInTCPUnreservedIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 104
+        }
+      },
+      "InternalSubnetAclEntryOutUDPDNS": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 111
+        }
+      },
+      "InternalSubnetAclEntryIn": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1,
+            "To": 65535
+          },
+          "Protocol": -1,
+          "RuleAction": "allow",
+          "RuleNumber": 100
+        }
+      },
+      "InternalSubnetAclEntryInTCPUnreserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 102
+        }
+      },
+      "InternalSubnetAclEntryInUDPUnreserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 103
+        }
+      },
+      "RestrictedSubnetAcl": {
+        "Type": "AWS::EC2::NetworkAcl",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "RestrictedSubnetAcl"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ],
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          }
+        }
+      },
+      "RestrictedSubnetAclEntryInUDPUnReserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 91
+        }
+      },
+      "RestrictedSubnetAclEntryOutSSH": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 22,
+            "To": 22
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 103
+        }
+      },
+      "RestrictedSubnetAclEntryOutDNSTCPIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 151
+        }
+      },
+      "RestrictedSubnetAclEntryOutHTTPSIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 443,
+            "To": 443
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 105
+        }
+      },
+      "RestrictedSubnetAclEntryInTCPUnReservedIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 92
+        }
+      },
+      "RestrictedSubnetAclEntryNTP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 123,
+            "To": 123
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 120
+        }
+      },
+      "RestrictedSubnetAclEntryOutPuppet": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 8140,
+            "To": 8140
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 94
+        }
+      },
+      "RestrictedSubnetAclEntryIn": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1,
+            "To": 65535
+          },
+          "Protocol": -1,
+          "RuleAction": "allow",
+          "RuleNumber": 110
+        }
+      },
+      "RestrictedSubnetAclEntryOutHTTP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 80,
+            "To": 80
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 101
+        }
+      },
+      "RestrictedSubnetAclEntryInHTTPSIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 443,
+            "To": 443
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 104
+        }
+      },
+      "RestrictedSubnetAclEntryInNetBios": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 389,
+            "To": 389
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 170
+        }
+      },
+      "RestrictedSubnetAclEntryOutDNSTCP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 150
+        }
+      },
+      "RestrictedSubnetAclEntryInUDPUnReservedIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 93
+        }
+      },
+      "RestrictedSubnetAclEntryInHTTP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 80,
+            "To": 80
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 101
+        }
+      },
+      "RestrictedSubnetAclEntryInHTTPIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 80,
+            "To": 80
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 103
+        }
+      },
+      "RestrictedSubnetAclEntryOutDNSUDP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 160
+        }
+      },
+      "RestrictedSubnetAclEntryInTCPUnReserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 90
+        }
+      },
+      "RestrictedSubnetAclEntryOutTCPUnReserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 90
+        }
+      },
+      "RestrictedSubnetAclEntryInDNSTCP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 150
+        }
+      },
+      "RestrictedSubnetAclEntryOutUDPUnReservedIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 93
+        }
+      },
+      "RestrictedSubnetAclEntryOutNetBios1": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 137,
+            "To": 139
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 180
+        }
+      },
+      "RestrictedSubnetAclEntryOut": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1,
+            "To": 65535
+          },
+          "Protocol": -1,
+          "RuleAction": "allow",
+          "RuleNumber": 110
+        }
+      },
+      "RestrictedSubnetAclEntryOutHTTPIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 80,
+            "To": 80
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 104
+        }
+      },
+      "RestrictedSubnetAclEntryOutHTTPS": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 443,
+            "To": 443
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 102
+        }
+      },
+      "RestrictedSubnetAclEntryOutNetBios": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 389,
+            "To": 389
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 170
+        }
+      },
+      "RestrictedSubnetAclEntryOutTCPUnReservedIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 92
+        }
+      },
+      "RestrictedSubnetAclEntryOutUDPUnReserved": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 1024,
+            "To": 65535
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 91
+        }
+      },
+      "RestrictedSubnetAclEntryInNetBios1": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 137,
+            "To": 139
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 80
+        }
+      },
+      "RestrictedSubnetAclEntryOutSSHIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 22,
+            "To": 22
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 106
+        }
+      },
+      "RestrictedSubnetAclEntryInHTTPS": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "0.0.0.0/0",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 443,
+            "To": 443
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 102
+        }
+      },
+      "RestrictedSubnetAclEntryInDNSUDP": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 160
+        }
+      },
+      "RestrictedSubnetAclEntryOutDNSUDPIPv6": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "Ipv6CidrBlock": "::/0",
+          "Egress": true,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 53,
+            "To": 53
+          },
+          "Protocol": 17,
+          "RuleAction": "allow",
+          "RuleNumber": 161
+        }
+      },
+      "RestrictedSubnetAclEntryInSquid2": {
+        "Type": "AWS::EC2::NetworkAclEntry",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/16",
+          "Egress": false,
+          "NetworkAclId": {
+            "Ref": "RestrictedSubnetAcl"
+          },
+          "PortRange": {
+            "From": 3128,
+            "To": 3128
+          },
+          "Protocol": 6,
+          "RuleAction": "allow",
+          "RuleNumber": 140
+        }
+      },
+      "EIPNATGW3": {
+        "Type": "AWS::EC2::EIP",
+        "Properties": {
+          "Domain": "vpc"
+        }
+      },
+      "NATGW3": {
+        "Type": "AWS::EC2::NatGateway",
+        "Properties": {
+          "AllocationId": {
+            "Fn::GetAtt": [
+              "EIPNATGW3",
+              "AllocationId"
+            ]
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet3"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "NATGW3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "InternalRT3NATGW3": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "NatGatewayId": {
+            "Ref": "NATGW3"
+          },
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          }
+        }
+      },
+      "InternalRT3NATGW3IPv6": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationIpv6CidrBlock": "::/0",
+          "EgressOnlyInternetGatewayId": {
+            "Ref": "EgressGateway"
+          },
+          "RouteTableId": {
+            "Ref": "InternalRT3"
+          }
+        }
+      },
+      "EIPNATGW2": {
+        "Type": "AWS::EC2::EIP",
+        "Properties": {
+          "Domain": "vpc"
+        }
+      },
+      "NATGW2": {
+        "Type": "AWS::EC2::NatGateway",
+        "Properties": {
+          "AllocationId": {
+            "Fn::GetAtt": [
+              "EIPNATGW2",
+              "AllocationId"
+            ]
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet2"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "NATGW2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "InternalRT2NATGW2": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "NatGatewayId": {
+            "Ref": "NATGW2"
+          },
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          }
+        }
+      },
+      "InternalRT2NATGW2IPv6": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationIpv6CidrBlock": "::/0",
+          "EgressOnlyInternetGatewayId": {
+            "Ref": "EgressGateway"
+          },
+          "RouteTableId": {
+            "Ref": "InternalRT2"
+          }
+        }
+      },
+      "EIPNATGW1": {
+        "Type": "AWS::EC2::EIP",
+        "Properties": {
+          "Domain": "vpc"
+        }
+      },
+      "NATGW1": {
+        "Type": "AWS::EC2::NatGateway",
+        "Properties": {
+          "AllocationId": {
+            "Fn::GetAtt": [
+              "EIPNATGW1",
+              "AllocationId"
+            ]
+          },
+          "SubnetId": {
+            "Ref": "ReservedNet1"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "NATGW1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "InternalRT1NATGW1": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "NatGatewayId": {
+            "Ref": "NATGW1"
+          },
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          }
+        }
+      },
+      "InternalRT1NATGW1IPv6": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationIpv6CidrBlock": "::/0",
+          "EgressOnlyInternetGatewayId": {
+            "Ref": "EgressGateway"
+          },
+          "RouteTableId": {
+            "Ref": "InternalRT1"
+          }
+        }
+      },
+      "VPCEndpoint": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "GroupName": "VPCEndpoint",
+          "GroupDescription": "VPC Endpoint Interface Firewall Rules",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "SecurityGroupIngress": [
+            {
+              "IpProtocol": "icmp",
+              "FromPort": -1,
+              "ToPort": -1,
+              "CidrIp": "172.16.0.0/20",
+              "Description": "All ICMP Traffic"
+            },
+            {
+              "IpProtocol": "tcp",
+              "FromPort": 0,
+              "ToPort": 65535,
+              "CidrIp": "172.16.0.0/20",
+              "Description": "All TCP Traffic"
+            },
+            {
+              "IpProtocol": "udp",
+              "FromPort": 0,
+              "ToPort": 65535,
+              "CidrIp": "172.16.0.0/20",
+              "Description": "All UDP Traffic"
+            }
+          ],
+          "SecurityGroupEgress": [
+            {
+              "IpProtocol": "icmp",
+              "FromPort": -1,
+              "ToPort": -1,
+              "CidrIp": "172.16.0.0/20",
+              "Description": "All ICMP Traffic"
+            },
+            {
+              "IpProtocol": "tcp",
+              "FromPort": 0,
+              "ToPort": 65535,
+              "CidrIp": "172.16.0.0/20",
+              "Description": "All TCP Traffic"
+            },
+            {
+              "IpProtocol": "udp",
+              "FromPort": 0,
+              "ToPort": 65535,
+              "CidrIp": "172.16.0.0/20",
+              "Description": "All UDP Traffic"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "VPCEndpoint"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            }
+          ]
+        }
+      },
+      "kinesisstreamsEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".kinesis-streams"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "cloudtrailEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".cloudtrail"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "cloudformationEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".cloudformation"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "elasticloadbalancingEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".elasticloadbalancing"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "ec2EndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".ec2"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "logsEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".logs"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "monitoringEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".monitoring"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "s3EndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".s3"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Gateway",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PolicyDocument": "{\n    \"Version\":\"2012-10-17\",\n    \"Statement\":[\n        {\n            \"Effect\":\"Allow\",\n            \"Principal\": \"*\",\n            \"Action\":[\"s3:*\"],\n            \"Resource\":[\"*\"]\n        }\n    ]\n}\n",
+          "RouteTableIds": [
+            {
+              "Ref": "PublicRT"
+            },
+            {
+              "Ref": "InternalRT1"
+            },
+            {
+              "Ref": "InternalRT2"
+            },
+            {
+              "Ref": "InternalRT3"
+            }
+          ]
+        }
+      },
+      "dynamodbEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".dynamodb"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Gateway",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PolicyDocument": "{\n    \"Version\":\"2012-10-17\",\n    \"Statement\":[\n        {\n            \"Effect\":\"Allow\",\n            \"Principal\": \"*\",\n            \"Action\":[\"s3:*\"],\n            \"Resource\":[\"*\"]\n        }\n    ]\n}\n",
+          "RouteTableIds": [
+            {
+              "Ref": "PublicRT"
+            },
+            {
+              "Ref": "InternalRT1"
+            },
+            {
+              "Ref": "InternalRT2"
+            },
+            {
+              "Ref": "InternalRT3"
+            }
+          ]
+        }
+      },
+      "ec2messagesEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".ec2messages"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "kmsEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".kms"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "configEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".config"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "eventsEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".events"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "sagemakerapiEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".sagemaker.api"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "ssmEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".ssm"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "snsEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".sns"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "sagemakerruntimeEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".sagemaker.runtime"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "codebuildEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".codebuild"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "servicecatalogEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".servicecatalog"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "executeapiEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".execute-api"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "secretsmanagerEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".secretsmanager"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      },
+      "ssmmessagesEndPoint": {
+        "Type": "AWS::EC2::VPCEndpoint",
+        "Properties": {
+          "ServiceName": {
+            "Fn::Join": [
+              "",
+              [
+                "com.amazonaws.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".ssmmessages"
+              ]
+            ]
+          },
+          "VpcEndpointType": "Interface",
+          "VpcId": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "PrivateDnsEnabled": true,
+          "SubnetIds": [
+            {
+              "Ref": "ReservedMgmt1"
+            },
+            {
+              "Ref": "ReservedMgmt2"
+            },
+            {
+              "Ref": "ReservedMgmt3"
+            }
+          ],
+          "SecurityGroupIds": [
+            {
+              "Ref": "VPCEndpoint"
+            }
+          ]
+        }
+      }
+    },
+    "Description": "Private VPC Template",
+    "Parameters": {
+      "VGW": {
+        "Default": "vgw-012345678",
+        "Type": "String",
+        "Description": "VPC Gateway"
+      }
+    },
+    "Mappings": {},
+    "Outputs": {
+      "PRIVATEEGRESSVPC": {
+        "Description": "PRIVATEEGRESSVPC",
+        "Value": {
+          "Ref": "PRIVATEEGRESSVPC"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-VPCid"
+          }
+        }
+      },
+      "InternalRT3": {
+        "Description": "InternalRT3",
+        "Value": {
+          "Ref": "InternalRT3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-InternalRT3"
+          }
+        }
+      },
+      "PublicRT": {
+        "Description": "PublicRT",
+        "Value": {
+          "Ref": "PublicRT"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-PublicRT"
+          }
+        }
+      },
+      "InternalRT2": {
+        "Description": "InternalRT2",
+        "Value": {
+          "Ref": "InternalRT2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-InternalRT2"
+          }
+        }
+      },
+      "InternalRT1": {
+        "Description": "InternalRT1",
+        "Value": {
+          "Ref": "InternalRT1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-InternalRT1"
+          }
+        }
+      },
+      "ReservedMgmt1": {
+        "Description": "ReservedMgmt1",
+        "Value": {
+          "Ref": "ReservedMgmt1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-ReservedMgmt1"
+          }
+        }
+      },
+      "ReservedMgmt2": {
+        "Description": "ReservedMgmt2",
+        "Value": {
+          "Ref": "ReservedMgmt2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-ReservedMgmt2"
+          }
+        }
+      },
+      "ReservedMgmt3": {
+        "Description": "ReservedMgmt3",
+        "Value": {
+          "Ref": "ReservedMgmt3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-ReservedMgmt3"
+          }
+        }
+      },
+      "Internal1": {
+        "Description": "Internal1",
+        "Value": {
+          "Ref": "Internal1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Internal1"
+          }
+        }
+      },
+      "Internal2": {
+        "Description": "Internal2",
+        "Value": {
+          "Ref": "Internal2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Internal2"
+          }
+        }
+      },
+      "Internal3": {
+        "Description": "Internal3",
+        "Value": {
+          "Ref": "Internal3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Internal3"
+          }
+        }
+      },
+      "ReservedNet3": {
+        "Description": "ReservedNet3",
+        "Value": {
+          "Ref": "ReservedNet3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-ReservedNet3"
+          }
+        }
+      },
+      "ReservedNet2": {
+        "Description": "ReservedNet2",
+        "Value": {
+          "Ref": "ReservedNet2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-ReservedNet2"
+          }
+        }
+      },
+      "ReservedNet1": {
+        "Description": "ReservedNet1",
+        "Value": {
+          "Ref": "ReservedNet1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-ReservedNet1"
+          }
+        }
+      },
+      "PerimeterInternal1": {
+        "Description": "PerimeterInternal1",
+        "Value": {
+          "Ref": "PerimeterInternal1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-PerimeterInternal1"
+          }
+        }
+      },
+      "PerimeterInternal2": {
+        "Description": "PerimeterInternal2",
+        "Value": {
+          "Ref": "PerimeterInternal2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-PerimeterInternal2"
+          }
+        }
+      },
+      "PerimeterInternal3": {
+        "Description": "PerimeterInternal3",
+        "Value": {
+          "Ref": "PerimeterInternal3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-PerimeterInternal3"
+          }
+        }
+      },
+      "InternalSubnetAcl": {
+        "Description": "InternalSubnetAcl",
+        "Value": {
+          "Ref": "InternalSubnetAcl"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-NACL-InternalSubnetAcl"
+          }
+        }
+      },
+      "RestrictedSubnetAcl": {
+        "Description": "RestrictedSubnetAcl",
+        "Value": {
+          "Ref": "RestrictedSubnetAcl"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-NACL-RestrictedSubnetAcl"
+          }
+        }
+      },
+      "EIPNATGW3": {
+        "Description": "EIP for NATGW3",
+        "Value": {
+          "Ref": "EIPNATGW3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-EIP-NATGW3"
+          }
+        }
+      },
+      "NATGW3": {
+        "Description": "NATGW3",
+        "Value": {
+          "Ref": "NATGW3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-NATGW-NATGW3"
+          }
+        }
+      },
+      "EIPNATGW2": {
+        "Description": "EIP for NATGW2",
+        "Value": {
+          "Ref": "EIPNATGW2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-EIP-NATGW2"
+          }
+        }
+      },
+      "NATGW2": {
+        "Description": "NATGW2",
+        "Value": {
+          "Ref": "NATGW2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-NATGW-NATGW2"
+          }
+        }
+      },
+      "EIPNATGW1": {
+        "Description": "EIP for NATGW1",
+        "Value": {
+          "Ref": "EIPNATGW1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-EIP-NATGW1"
+          }
+        }
+      },
+      "NATGW1": {
+        "Description": "NATGW1",
+        "Value": {
+          "Ref": "NATGW1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-NATGW-NATGW1"
+          }
+        }
+      }
+    }
+  }
+}

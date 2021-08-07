@@ -1,0 +1,115 @@
+{
+    "requestId": "508122ef-6442-46eb-b2fc-5fab1f4f7064",
+    "status": "success",
+    "fragment": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Resources": {
+        "PRIVATEEGRESSVPC": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+            "CidrBlock": "172.16.0.0/20",
+            "EnableDnsHostnames": "true",
+            "EnableDnsSupport": "true",
+            "InstanceTenancy": "default",
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "PRIVATEEGRESSVPC"
+              }
+            ]
+          }
+        },
+        "IPv6Block": {
+          "Type": "AWS::EC2::VPCCidrBlock",
+          "Properties": {
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            },
+            "AmazonProvidedIpv6CidrBlock": "true"
+          }
+        },
+        "EgressGateway": {
+          "Type": "AWS::EC2::EgressOnlyInternetGateway",
+          "Properties": {
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            }
+          }
+        },
+        "DhcpOptions": {
+          "Type": "AWS::EC2::DHCPOptions",
+          "Properties": {
+            "DomainName": {
+              "Ref": "AWS::NoValue"
+            },
+            "DomainNameServers": [
+              "172.16.0.2"
+            ],
+            "NtpServers": [
+              "169.254.169.123"
+            ],
+            "NetbiosNameServers": {
+              "Ref": "AWS::NoValue"
+            },
+            "NetbiosNodeType": 2,
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "DhcpOptions"
+              }
+            ]
+          }
+        },
+        "DhcpOptionsAssociation": {
+          "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+          "Properties": {
+            "DhcpOptionsId": {
+              "Ref": "DhcpOptions"
+            },
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            }
+          }
+        },
+        "InternetGateway": {
+          "Type": "AWS::EC2::InternetGateway",
+          "Properties": {
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "InternetGateway"
+              }
+            ]
+          }
+        },
+        "IGWVPCGatewayAttachment": {
+          "Type": "AWS::EC2::VPCGatewayAttachment",
+          "Properties": {
+            "InternetGatewayId": {
+              "Ref": "InternetGateway"
+            },
+            "VpcId": {
+              "Ref": "PRIVATEEGRESSVPC"
+            }
+          }
+        }
+      },
+      "Description": "Private VPC Template",
+      "Parameters": {},
+      "Mappings": {},
+      "Outputs": {
+        "PRIVATEEGRESSVPC": {
+          "Description": "PRIVATEEGRESSVPC",
+          "Value": {
+            "Ref": "PRIVATEEGRESSVPC"
+          },
+          "Export": {
+            "Name": {
+              "Fn::Sub": "${AWS::StackName}-VPCid"
+            }
+          }
+        }
+      }
+    }
+  }
+  

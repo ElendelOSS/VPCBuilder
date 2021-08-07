@@ -1,0 +1,164 @@
+{
+  "Test2TransitGWAttach": {
+    "Type": "AWS::EC2::TransitGatewayAttachment",
+    "Properties": {
+      "SubnetIds": [
+        {
+          "Ref": "Internal1"
+        },
+        {
+          "Ref": "Internal2"
+        },
+        {
+          "Ref": "Internal3"
+        }
+      ],
+      "VpcId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "TransitGatewayId": "tgw-98765432109876543",
+      "Tags": [
+        {
+          "Value": "PRIVATE-EGRESS-VPC-TGW2",
+          "Key": "Name"
+        },
+        {
+          "Value": "Gateway Attach 2",
+          "Key": "Purpose"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "Test2InternalRT1Internal1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "10.0.0.0/8",
+      "TransitGatewayId": "tgw-98765432109876543",
+      "RouteTableId": {
+        "Ref": "InternalRT1"
+      }
+    },
+    "DependsOn": [
+      "Test2TransitGWAttach"
+    ]
+  },
+  "Test2InternalRT1Internal2": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "192.168.0.0/16",
+      "TransitGatewayId": "tgw-98765432109876543",
+      "RouteTableId": {
+        "Ref": "InternalRT1"
+      }
+    },
+    "DependsOn": [
+      "Test2TransitGWAttach"
+    ]
+  },
+  "Test2InternalRT2Internal1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "10.0.0.0/8",
+      "TransitGatewayId": "tgw-98765432109876543",
+      "RouteTableId": {
+        "Ref": "InternalRT2"
+      }
+    },
+    "DependsOn": [
+      "Test2TransitGWAttach"
+    ]
+  },
+  "Test2InternalRT2Internal2": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "192.168.0.0/16",
+      "TransitGatewayId": "tgw-98765432109876543",
+      "RouteTableId": {
+        "Ref": "InternalRT2"
+      }
+    },
+    "DependsOn": [
+      "Test2TransitGWAttach"
+    ]
+  },
+  "Test2InternalRT3Internal1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "10.0.0.0/8",
+      "TransitGatewayId": "tgw-98765432109876543",
+      "RouteTableId": {
+        "Ref": "InternalRT3"
+      }
+    },
+    "DependsOn": [
+      "Test2TransitGWAttach"
+    ]
+  },
+  "Test2InternalRT3Internal2": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "192.168.0.0/16",
+      "TransitGatewayId": "tgw-98765432109876543",
+      "RouteTableId": {
+        "Ref": "InternalRT3"
+      }
+    },
+    "DependsOn": [
+      "Test2TransitGWAttach"
+    ]
+  },
+  "Test1TransitGWAttach": {
+    "Type": "AWS::EC2::TransitGatewayAttachment",
+    "Properties": {
+      "SubnetIds": [
+        {
+          "Ref": "Internal1"
+        },
+        {
+          "Ref": "Internal2"
+        },
+        {
+          "Ref": "Internal3"
+        }
+      ],
+      "VpcId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "TransitGatewayId": "tgw-01234567890123456",
+      "Tags": [
+        {
+          "Value": "PRIVATE-EGRESS-VPC-TGW1",
+          "Key": "Name"
+        },
+        {
+          "Value": "Gateway Attach 1",
+          "Key": "Purpose"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,201 @@
+{
+  "VPCFlowLogsRole": {
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "vpc-flow-logs.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }
+        ]
+      },
+      "Path": "/",
+      "Policies": [
+        {
+          "PolicyName": "Default",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "logs:*"
+                ],
+                "Resource": "arn:aws:logs:*:*:defaultlogs"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "VPCFlowLogS3Style": {
+    "Type": "AWS::EC2::FlowLog",
+    "Properties": {
+      "LogDestination": "arn:aws:s3:::S3Style",
+      "LogDestinationType": "s3",
+      "ResourceId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "ResourceType": "VPC",
+      "TrafficType": "ACCEPT"
+    }
+  },
+  "S3StyleS3BucketPolicy": {
+    "Properties": {
+      "Bucket": {
+        "Ref": "S3StyleS3Bucket"
+      },
+      "PolicyDocument": {
+        "Statement": [
+          {
+            "Sid": "AWSLogDeliveryWrite",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "delivery.logs.amazonaws.com"
+            },
+            "Action": "s3:PutObject",
+            "Resource": [
+              {
+                "Fn::Sub": "arn:aws:s3:::S3Style/AWSLogs/${AWS::AccountId}/*"
+              }
+            ],
+            "Condition": {
+              "StringEquals": {
+                "s3:x-amz-acl": "bucket-owner-full-control"
+              }
+            }
+          },
+          {
+            "Sid": "AWSLogDeliveryAclCheck",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "delivery.logs.amazonaws.com"
+            },
+            "Action": "s3:GetBucketAcl",
+            "Resource": "arn:aws:s3:::S3Style"
+          }
+        ]
+      }
+    },
+    "Type": "AWS::S3::BucketPolicy"
+  },
+  "S3StyleS3Bucket": {
+    "Properties": {
+      "BucketName": "S3Style",
+      "Tags": [
+        {
+          "Key": "Name",
+          "Value": "S3Style"
+        },
+        {
+          "Key": "Description",
+          "Value": "Bucket for VPCFlowlog: S3Style"
+        }
+      ],
+      "PublicAccessBlockConfiguration": {
+        "BlockPublicAcls": true,
+        "BlockPublicPolicy": true,
+        "IgnorePublicAcls": true,
+        "RestrictPublicBuckets": true
+      },
+      "BucketEncryption": {
+        "ServerSideEncryptionConfiguration": [
+          {
+            "ServerSideEncryptionByDefault": {
+              "KMSMasterKeyID": {
+                "Fn::GetAtt": [
+                  "S3StyleKMSKey",
+                  "Arn"
+                ]
+              },
+              "SSEAlgorithm": "aws:kms"
+            }
+          }
+        ]
+      }
+    },
+    "Type": "AWS::S3::Bucket"
+  },
+  "S3StyleKMSKey": {
+    "Type": "AWS::KMS::Key",
+    "Properties": {
+      "Description": "Key for VPCFlowLogs: S3Style and S3 Bucket: S3Style",
+      "EnableKeyRotation": true,
+      "KeyPolicy": {
+        "Version": "2012-10-17",
+        "Id": "S3Style-vpcflowlog",
+        "Statement": [
+          {
+            "Sid": "Allows admin of the key",
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": {
+                "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+              }
+            },
+            "Action": [
+              "kms:Create*",
+              "kms:Describe*",
+              "kms:Enable*",
+              "kms:List*",
+              "kms:Put*",
+              "kms:Update*",
+              "kms:Revoke*",
+              "kms:Disable*",
+              "kms:Get*",
+              "kms:Delete*",
+              "kms:ScheduleKeyDeletion",
+              "kms:CancelKeyDeletion"
+            ],
+            "Resource": "*"
+          },
+          {
+            "Sid": "Allow VPCFlowLogs",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "delivery.logs.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "kms:Encrypt",
+              "kms:Decrypt",
+              "kms:ReEncrypt*",
+              "kms:GenerateDataKey*",
+              "kms:DescribeKey"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    }
+  },
+  "VPCFlowLogDefault": {
+    "Type": "AWS::EC2::FlowLog",
+    "Properties": {
+      "DeliverLogsPermissionArn": {
+        "Fn::GetAtt": [
+          "VPCFlowLogsRole",
+          "Arn"
+        ]
+      },
+      "LogDestinationType": "cloud-watch-logs",
+      "LogGroupName": "defaultlogs",
+      "ResourceId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "ResourceType": "VPC",
+      "TrafficType": "ALL"
+    }
+  }
+}

@@ -1,0 +1,1468 @@
+{
+  "requestId": "508122ef-6442-46eb-b2fc-5fab1f4f7064",
+  "status": "success",
+  "fragment": {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+      "VPCProd": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock": "172.16.0.0/20",
+          "EnableDnsHostnames": true,
+          "EnableDnsSupport": true,
+          "InstanceTenancy": "default",
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "VPCProd"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ]
+        }
+      },
+      "IPv6Block": {
+        "Type": "AWS::EC2::VPCCidrBlock",
+        "Properties": {
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AmazonProvidedIpv6CidrBlock": true
+        }
+      },
+      "EgressGateway": {
+        "Type": "AWS::EC2::EgressOnlyInternetGateway",
+        "Properties": {
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "DhcpOptions": {
+        "Type": "AWS::EC2::DHCPOptions",
+        "Properties": {
+          "DomainNameServers": [
+            "172.16.0.2"
+          ],
+          "NtpServers": [
+            "169.254.169.123"
+          ],
+          "NetbiosNodeType": 2,
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "DhcpOptions"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ]
+        }
+      },
+      "DhcpOptionsAssociation": {
+        "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+        "Properties": {
+          "DhcpOptionsId": {
+            "Ref": "DhcpOptions"
+          },
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "InternetGateway": {
+        "Type": "AWS::EC2::InternetGateway",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "InternetGateway"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ]
+        }
+      },
+      "IGWVPCGatewayAttachment": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "InternetGatewayId": {
+            "Ref": "InternetGateway"
+          },
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "VPCGatewayAttachment": {
+        "Type": "AWS::EC2::VPCGatewayAttachment",
+        "Properties": {
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        }
+      },
+      "VPCFlowLogsRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": [
+                    "vpc-flow-logs.amazonaws.com"
+                  ]
+                },
+                "Action": [
+                  "sts:AssumeRole"
+                ]
+              }
+            ]
+          },
+          "Path": "/",
+          "Policies": [
+            {
+              "PolicyName": "root",
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "logs:*"
+                    ],
+                    "Resource": "arn:aws:logs:*:*:*"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "VPCFlowLogs": {
+        "Type": "AWS::EC2::FlowLog",
+        "Properties": {
+          "DeliverLogsPermissionArn": {
+            "Fn::GetAtt": [
+              "VPCFlowLogsRole",
+              "Arn"
+            ]
+          },
+          "LogGroupName": "FlowLogsGroup",
+          "ResourceId": {
+            "Ref": "VPCProd"
+          },
+          "ResourceType": "VPC",
+          "TrafficType": "ALL"
+        }
+      },
+      "PrivateRT3": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PrivateRT3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "PrivateRT3RoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "PrivateRT3"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "PublicRT": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PublicRT"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "PublicRTRoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "PublicRT"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "PublicRoute": {
+        "Type": "AWS::EC2::Route",
+        "Properties": {
+          "DestinationCidrBlock": "0.0.0.0/0",
+          "GatewayId": {
+            "Ref": "InternetGateway"
+          },
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          }
+        }
+      },
+      "PrivateRT2": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PrivateRT2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "PrivateRT2RoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "PrivateRT2"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "PrivateRT1": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "PrivateRT1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "PrivateRT1RoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "PrivateRT1"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "RestrictedRT": {
+        "Type": "AWS::EC2::RouteTable",
+        "Properties": {
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "RestrictedRT"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          }
+        }
+      },
+      "RestrictedRTRoutePropagation": {
+        "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+        "Properties": {
+          "RouteTableIds": [
+            {
+              "Ref": "RestrictedRT"
+            }
+          ],
+          "VpnGatewayId": {
+            "Ref": "VGW"
+          }
+        },
+        "DependsOn": [
+          "VPCGatewayAttachment"
+        ]
+      },
+      "Public1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "PublicCidr1"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Public1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Public1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          },
+          "SubnetId": {
+            "Ref": "Public1"
+          }
+        }
+      },
+      "Public1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "PublicSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Public1"
+          }
+        }
+      },
+      "Public2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "PublicCidr2"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Public2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Public2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          },
+          "SubnetId": {
+            "Ref": "Public2"
+          }
+        }
+      },
+      "Public2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "PublicSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Public2"
+          }
+        }
+      },
+      "Public3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "PublicCidr3"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Public3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Public3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PublicRT"
+          },
+          "SubnetId": {
+            "Ref": "Public3"
+          }
+        }
+      },
+      "Public3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "PublicSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Public3"
+          }
+        }
+      },
+      "Private1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "PrivateCidr1"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Private1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Private1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PrivateRT1"
+          },
+          "SubnetId": {
+            "Ref": "Private1"
+          }
+        }
+      },
+      "Private1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Private1"
+          }
+        }
+      },
+      "Private2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "PrivateCidr2"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Private2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Private2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PrivateRT2"
+          },
+          "SubnetId": {
+            "Ref": "Private2"
+          }
+        }
+      },
+      "Private2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Private2"
+          }
+        }
+      },
+      "Private3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "PrivateCidr3"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Private3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Private3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "PrivateRT3"
+          },
+          "SubnetId": {
+            "Ref": "Private3"
+          }
+        }
+      },
+      "Private3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Private3"
+          }
+        }
+      },
+      "Protected1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "ProtectedCidr1"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Protected1"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              0,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Protected1SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "RestrictedRT"
+          },
+          "SubnetId": {
+            "Ref": "Protected1"
+          }
+        }
+      },
+      "Protected1SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Protected1"
+          }
+        }
+      },
+      "Protected2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "ProtectedCidr2"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Protected2"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              1,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Protected2SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "RestrictedRT"
+          },
+          "SubnetId": {
+            "Ref": "Protected2"
+          }
+        }
+      },
+      "Protected2SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Protected2"
+          }
+        }
+      },
+      "Protected3": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::GetAZs": ""
+              }
+            ]
+          },
+          "CidrBlock": {
+            "Ref": "ProtectedCidr3"
+          },
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "Protected3"
+            },
+            {
+              "Key": "Name",
+              "Value": "PRIVATE-EGRESS-VPC"
+            },
+            {
+              "Key": "Template",
+              "Value": "VPC for private endpoints egress only"
+            },
+            {
+              "Key": "info:environment",
+              "Value": "Staging"
+            },
+            {
+              "Key": "info:owner",
+              "Value": "Versent"
+            }
+          ],
+          "VpcId": {
+            "Ref": "VPCProd"
+          },
+          "AssignIpv6AddressOnCreation": true,
+          "Ipv6CidrBlock": {
+            "Fn::Select": [
+              2,
+              {
+                "Fn::Cidr": [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::GetAtt": [
+                          "VPCProd",
+                          "Ipv6CidrBlocks"
+                        ]
+                      }
+                    ]
+                  },
+                  9,
+                  64
+                ]
+              }
+            ]
+          }
+        },
+        "DependsOn": "IPv6Block"
+      },
+      "Protected3SubnetRoutetableAssociation": {
+        "Type": "AWS::EC2::SubnetRouteTableAssociation",
+        "Properties": {
+          "RouteTableId": {
+            "Ref": "RestrictedRT"
+          },
+          "SubnetId": {
+            "Ref": "Protected3"
+          }
+        }
+      },
+      "Protected3SubnetNetworkACLAssociation": {
+        "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+        "Properties": {
+          "NetworkAclId": {
+            "Ref": "InternalSubnetAcl"
+          },
+          "SubnetId": {
+            "Ref": "Protected3"
+          }
+        }
+      }
+    },
+    "Description": "Private VPC Template",
+    "Parameters": {
+      "VGW": {
+        "Default": "vgw-012345678",
+        "Type": "String",
+        "Description": "VPC Gateway"
+      },
+      "Environment": {
+        "Description": "Name of target environment",
+        "Type": "String",
+        "Default": "foo"
+      },
+      "VpcCidr": {
+        "Description": "CIDR range for the complete VPC",
+        "Type": "String",
+        "Default": "10.0.0.0/20"
+      },
+      "DnsServer": {
+        "Description": "DNS server",
+        "Type": "String",
+        "Default": "10.0.0.2"
+      },
+      "PublicCidr1": {
+        "Description": "CIDR range for Public1",
+        "Type": "String",
+        "Default": "10.0.0.0/24"
+      },
+      "PublicCidr2": {
+        "Description": "CIDR range for Public2",
+        "Type": "String",
+        "Default": "10.0.0.1/24"
+      },
+      "PublicCidr3": {
+        "Description": "CIDR range for Public3",
+        "Type": "String",
+        "Default": "10.0.0.2/24"
+      },
+      "PrivateCidr1": {
+        "Description": "CIDR range for Private1",
+        "Type": "String",
+        "Default": "10.0.0.3/24"
+      },
+      "PrivateCidr2": {
+        "Description": "CIDR range for Private2",
+        "Type": "String",
+        "Default": "10.0.0.4/24"
+      },
+      "PrivateCidr3": {
+        "Description": "CIDR range for Private3",
+        "Type": "String",
+        "Default": "10.0.0.5/24"
+      },
+      "ProtectedCidr1": {
+        "Description": "CIDR range for Protected1",
+        "Type": "String",
+        "Default": "10.0.0.6/24"
+      },
+      "ProtectedCidr2": {
+        "Description": "CIDR range for Protected2",
+        "Type": "String",
+        "Default": "10.0.0.7/24"
+      },
+      "ProtectedCidr3": {
+        "Description": "CIDR range for Protected3",
+        "Type": "String",
+        "Default": "10.0.0.8/24"
+      }
+    },
+    "Mappings": {},
+    "Outputs": {
+      "VPCProd": {
+        "Description": "VPCProd",
+        "Value": {
+          "Fn::Sub": "VPCProd"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-VPCid"
+          }
+        }
+      },
+      "PrivateRT3": {
+        "Description": "PrivateRT3",
+        "Value": {
+          "Ref": "PrivateRT3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-PrivateRT3"
+          }
+        }
+      },
+      "PublicRT": {
+        "Description": "PublicRT",
+        "Value": {
+          "Ref": "PublicRT"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-PublicRT"
+          }
+        }
+      },
+      "PrivateRT2": {
+        "Description": "PrivateRT2",
+        "Value": {
+          "Ref": "PrivateRT2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-PrivateRT2"
+          }
+        }
+      },
+      "PrivateRT1": {
+        "Description": "PrivateRT1",
+        "Value": {
+          "Ref": "PrivateRT1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-PrivateRT1"
+          }
+        }
+      },
+      "RestrictedRT": {
+        "Description": "RestrictedRT",
+        "Value": {
+          "Ref": "RestrictedRT"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-RouteTable-RestrictedRT"
+          }
+        }
+      },
+      "Public1": {
+        "Description": "Public1",
+        "Value": {
+          "Ref": "Public1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Public1"
+          }
+        }
+      },
+      "Public2": {
+        "Description": "Public2",
+        "Value": {
+          "Ref": "Public2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Public2"
+          }
+        }
+      },
+      "Public3": {
+        "Description": "Public3",
+        "Value": {
+          "Ref": "Public3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Public3"
+          }
+        }
+      },
+      "Private1": {
+        "Description": "Private1",
+        "Value": {
+          "Ref": "Private1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Private1"
+          }
+        }
+      },
+      "Private2": {
+        "Description": "Private2",
+        "Value": {
+          "Ref": "Private2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Private2"
+          }
+        }
+      },
+      "Private3": {
+        "Description": "Private3",
+        "Value": {
+          "Ref": "Private3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Private3"
+          }
+        }
+      },
+      "Protected1": {
+        "Description": "Protected1",
+        "Value": {
+          "Ref": "Protected1"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Protected1"
+          }
+        }
+      },
+      "Protected2": {
+        "Description": "Protected2",
+        "Value": {
+          "Ref": "Protected2"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Protected2"
+          }
+        }
+      },
+      "Protected3": {
+        "Description": "Protected3",
+        "Value": {
+          "Ref": "Protected3"
+        },
+        "Export": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-Subnet-Protected3"
+          }
+        }
+      }
+    }
+  }
+}

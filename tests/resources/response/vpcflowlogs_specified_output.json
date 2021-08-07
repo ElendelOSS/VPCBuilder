@@ -1,0 +1,28 @@
+{
+  "S3StyleS3Bucket": {
+    "Value": {
+      "Fn::GetAtt": [
+        "S3StyleS3Bucket",
+        "Arn"
+      ]
+    },
+    "Export": {
+      "Name": {
+        "Fn::Sub": "${AWS::StackName}-S3-S3Style-Arn"
+      }
+    }
+  },
+  "S3StyleS3BucketDomainName": {
+    "Value": {
+      "Fn::GetAtt": [
+        "S3StyleS3Bucket",
+        "DualStackDomainName"
+      ]
+    },
+    "Export": {
+      "Name": {
+        "Fn::Sub": "${AWS::StackName}-S3-S3Style-DomainName"
+      }
+    }
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "InternalRT2": {
+    "Type": "AWS::EC2::RouteTable",
+    "Properties": {
+      "VpcId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "Tags": [
+        {
+          "Value": "InternalRT2",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "PublicRouteIPv6": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      },
+      "RouteTableId": {
+        "Ref": "PublicRT"
+      },
+      "DestinationIpv6CidrBlock": "::/0"
+    }
+  },
+  "PublicRoute": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "GatewayId": {
+        "Ref": "InternetGateway"
+      },
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "RouteTableId": {
+        "Ref": "PublicRT"
+      }
+    }
+  },
+  "InternalRT1RoutePropagation": {
+    "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+    "Properties": {
+      "RouteTableIds": [
+        {
+          "Ref": "InternalRT1"
+        }
+      ],
+      "VpnGatewayId": {
+        "Ref": "VGW"
+      }
+    },
+    "DependsOn": [
+      "VPCGatewayAttachment"
+    ]
+  },
+  "InternalRT1": {
+    "Type": "AWS::EC2::RouteTable",
+    "Properties": {
+      "VpcId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "Tags": [
+        {
+          "Value": "InternalRT1",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "InternalRT3RoutePropagation": {
+    "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+    "Properties": {
+      "RouteTableIds": [
+        {
+          "Ref": "InternalRT3"
+        }
+      ],
+      "VpnGatewayId": {
+        "Ref": "VGW"
+      }
+    },
+    "DependsOn": [
+      "VPCGatewayAttachment"
+    ]
+  },
+  "PublicRT": {
+    "Type": "AWS::EC2::RouteTable",
+    "Properties": {
+      "VpcId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "Tags": [
+        {
+          "Value": "PublicRT",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "PublicRTRoutePropagation": {
+    "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+    "Properties": {
+      "RouteTableIds": [
+        {
+          "Ref": "PublicRT"
+        }
+      ],
+      "VpnGatewayId": {
+        "Ref": "VGW"
+      }
+    },
+    "DependsOn": [
+      "VPCGatewayAttachment"
+    ]
+  },
+  "InternalRT3": {
+    "Type": "AWS::EC2::RouteTable",
+    "Properties": {
+      "VpcId": {
+        "Ref": "PRIVATEEGRESSVPC"
+      },
+      "Tags": [
+        {
+          "Value": "InternalRT3",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "InternalRT2RoutePropagation": {
+    "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+    "Properties": {
+      "RouteTableIds": [
+        {
+          "Ref": "InternalRT2"
+        }
+      ],
+      "VpnGatewayId": {
+        "Ref": "VGW"
+      }
+    },
+    "DependsOn": [
+      "VPCGatewayAttachment"
+    ]
+  }
+}

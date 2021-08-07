@@ -1,0 +1,34 @@
+{
+  "transformId": "801604450668::VPC",
+  "templateParameterValues": {},
+  "fragment": {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+      "VPC": {
+        "Type": "ElendelOSS::Network::VPC",
+        "Properties": {
+          "Details": {
+            "VPCDesc": "Private Egress VPC",
+            "Region": "ap-southeast-2",
+            "VPCName": "PRIVATEEGRESSVPC",
+            "IPv6": "true"
+          },
+          "DHCP": {
+            "NTPServers": "169.254.169.123",
+            "NTBType": 2,
+            "Name": "DhcpOptions",
+            "DNSServers": "172.16.0.2"
+          },
+          "CIDR": "172.16.0.0/20"
+        }
+      }
+    },
+    "Description": "Private VPC Template",
+    "Parameters": {},
+    "Mappings": {}
+  },
+  "region": "us-east-1",
+  "params": {},
+  "requestId": "508122ef-6442-46eb-b2fc-5fab1f4f7064",
+  "accountId": "012345678901"
+}

@@ -2,7 +2,7 @@ import os
 import logging
 import re
 from troposphere import Template, Output, Ref, Export, Sub, GetAtt, Tags, Join, NoValue, Select, GetAZs, Cidr
-from troposphere.ec2 import VPCGatewayAttachment, InternetGateway, VPC, VPCCidrBlock, DHCPOptions, VPCDHCPOptionsAssociation, VPCEndpoint, VPCGatewayAttachment, FlowLog, EgressOnlyInternetGateway, SecurityGroup, SecurityGroupRule, EIP, NatGateway, Route, NetworkAcl, NetworkAclEntry, PortRange, Subnet, SubnetRoutetableAssociation, SubnetNetworkAclAssociation, RouteTable, TransitGatewayAttachment
+from troposphere.ec2 import VPCGatewayAttachment, InternetGateway, VPC, VPCCidrBlock, DHCPOptions, VPCDHCPOptionsAssociation, VPCEndpoint, VPCGatewayAttachment, FlowLog, EgressOnlyInternetGateway, SecurityGroup, SecurityGroupRule, EIP, NatGateway, Route, NetworkAcl, NetworkAclEntry, PortRange, Subnet, SubnetRouteTableAssociation, SubnetNetworkAclAssociation, RouteTable, TransitGatewayAttachment
 from troposphere.iam import Role
 from troposphere.s3 import Bucket, BucketEncryption, BucketPolicy
 from troposphere.kms import Key
@@ -23,8 +23,8 @@ class builder():
         self.logger.setLevel(int(os.environ.get('Logging', logging.DEBUG)))
         self.required_fields = {
         }
-        self.ipv4_regex = re.compile('^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$')
-        self.ipv6_regex = re.compile('^s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$')
+        self.ipv4_regex = re.compile(r'^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$')
+        self.ipv6_regex = re.compile(r'^s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?$')
 
 
     def validate_IPv6_key(self, cidr: str):
@@ -36,7 +36,7 @@ class builder():
             logger.debug("Invalid CIDR: {}".format(cidr))
             return "INVALID_CIDR"
 
-    def cloudformation_safe_string(self: builder, unsafe_string: str) -> str:
+    def cloudformation_safe_string(self, unsafe_string: str) -> str:
         if isinstance(unsafe_string, str):
             unsafe_char = '!@#$%^&*()_'
             safe_string_list = [x for x in unsafe_string if x not in unsafe_char]
@@ -98,75 +98,124 @@ class builder():
 
         return tags
 
+    def get_template(self):
+        self.logger.debug('Calling Get Template')
+        return self.template.to_dict()
+
     def build_all(self):
         self.logger.debug('Calling Build All Function')
         self.logger.debug('Calling Build VPC Baseline')
         self.build_baseline()
 
     def build_baseline(self):
-        self.template.add_resource(
-            VPC(
-                f"{self.name}VPC",
-                CidrBlock=self.properties.get('CIDR'),
-                EnableDnsSupport=True,
-                EnableDnsHostnames=True,
-                InstanceTenancy="default",
-                Tags=Tags(self.build_troposphere_tags(self.name, self.properties.get("Tags", {})))
-            )
-        )
-
-        self.template.add_output(
-            Output(
-                f"{self.name}VPC",
-                Value=Ref(f"{self.name}VPC"),
-                Export=Export(
-                    Sub(f"${{AWS::StackName}}-VPCid")
+        try:
+            self.template.add_resource(
+                VPC(
+                    f"{self.properties['Details']['VPCName']}",
+                    CidrBlock=self.properties.get('CIDR'),
+                    EnableDnsSupport=True,
+                    EnableDnsHostnames=True,
+                    InstanceTenancy="default",
+                    Tags=Tags(self.build_troposphere_tags(f"{self.properties['Details']['VPCName']}", self.properties.get("Tags", {})))
                 )
             )
-        )
+        except AssertionError as e:
+            self.logger.error("Failure to add VPC resource")
+        else:
+            self.logger.debug("Successfully added VPC resource")
 
-        self.template.add_resource(
-            DHCPOptions(
-                f"{self.properties.get('DHCP', {}).get('Name', 'DHCPOptions')}",
-                DomainName=self.properties.get('DHCP', {}).get('Name', 'DHCPOptions'),
-                DomainNameServers=self.properties.get('DHCP', {}).get('DNSServers', NoValue),
-                NetbiosNameServers=self.properties.get('DHCP', {}).get('NTBServers', NoValue),
-                NetbiosNodeType=self.properties.get('DHCP', {}).get('NTBType', NoValue),
-                NtpServers=self.properties.get('DHCP', {}).get('NTPServers', NoValue),
-                Tags=Tags(self.build_troposphere_tags(self.properties.get('DHCP', {}).get('Name', 'DHCPOptions'), self.properties.get("Tags", {})))
+        try:
+            self.template.add_output(
+                Output(
+                    f"{self.properties['Details']['VPCName']}",
+                    Description=f"{self.properties['Details']['VPCName']}",
+                    Value=Ref(f"{self.properties['Details']['VPCName']}"),
+                    Export=Export(
+                        Sub(f"${{AWS::StackName}}-VPCid")
+                    )
+                )
             )
-        )
+        except AssertionError as e:
+            self.logger.error("Failure to add VPC output")
+        else:
+            self.logger.debug("Successfully added VPC output")
 
-        self.template.add_resource(
-            InternetGateway(
-                "InternetGateway",
-                Tags=Tags(Name="InternetGateway")
+        try:
+            self.template.add_resource(
+                DHCPOptions(
+                    f"{self.properties.get('DHCP', {}).get('Name', 'DHCPOptions')}",
+                    DomainName=self.properties.get('DHCP', {}).get('DomainName', NoValue),
+                    DomainNameServers=[self.properties.get('DHCP', {}).get('DNSServers', NoValue)],
+                    NetbiosNameServers=self.properties.get('DHCP', {}).get('NTBServers', NoValue),
+                    NetbiosNodeType=self.properties.get('DHCP', {}).get('NTBType', NoValue),
+                    NtpServers=[self.properties.get('DHCP', {}).get('NTPServers', NoValue)],
+                    Tags=Tags(self.build_troposphere_tags(self.properties.get('DHCP', {}).get('Name', 'DHCPOptions'), self.properties.get("Tags", {})))
+                )
             )
-        )
+        except AssertionError as e:
+            self.logger.error("Failure to add DHCP resource")
+        else:
+            self.logger.debug("Successfully added DHCP resource")
 
-        self.template.add_resource(
-            VPCGatewayAttachment(
-                InternetGatewayId=Ref(InternetGateway),
-                VpcId=Ref(f"{self.name}VPC")
+        try:
+            self.template.add_resource(
+                VPCDHCPOptionsAssociation(
+                    "DhcpOptionsAssociation",
+                    DhcpOptionsId=Ref(f"{self.properties.get('DHCP', {}).get('Name', 'DHCPOptions')}"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}")
+                )
             )
-        )
+        except AssertionError as e:
+            self.logger.error("Failure to add DHCP Association resource")
+        else:
+            self.logger.debug("Successfully added DHCP Association resource")
 
-        self.template.add_resource()
+        try:
+            self.template.add_resource(
+                InternetGateway(
+                    "InternetGateway",
+                    Tags=Tags(Name="InternetGateway")
+                )
+            )
+        except AssertionError as e:
+            self.logger.error("Failure to add Internet Gateway resource")
+        else:
+            self.logger.debug("Successfully added Internet Gateway resource")
+
+        try:
+            self.template.add_resource(
+                VPCGatewayAttachment(
+                    "IGWVPCGatewayAttachment",
+                    InternetGatewayId=Ref("InternetGateway"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}")
+                )
+            )
+        except AssertionError as e:
+            self.logger.error("Failure to add Internet Gateway Attachment resource")
+        else:
+            self.logger.debug("Successfully added Internet Gateway Attachment resource")
 
         if self.properties.get("Details", {}).get("IPv6", None):
-            self.template.add_resource(
-                VPCCidrBlock(
-                    "IPv6Block",
-                    AmazonProvidedIpv6CidrBlock=True,
-                    VpcId=Ref(f"{self.name}VPC")
+            try:
+                self.template.add_resource(
+                    VPCCidrBlock(
+                        "IPv6Block",
+                        AmazonProvidedIpv6CidrBlock=True,
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}")
+                    )
                 )
-            )
 
-            self.template.add_resource(
-                EgressOnlyInternetGateway(
-                    VpcId=Ref(f"{self.name}VPC")
+                self.template.add_resource(
+                    EgressOnlyInternetGateway(
+                        "EgressGateway",
+                        VpcId=Ref(f"{self.properties['Details']['VPCName']}")
+                    )
                 )
-            )
+            except AssertionError as e:
+                self.logger.error("Failure to add IPv6 Block resource")
+            else:
+                self.logger.debug("Successfully added IPv6 Block resource")
+
 
     def build_vpc_endpoints(self):
         for endpoint, details in self.properties.get("Endpoints", {}).items():
@@ -175,7 +224,7 @@ class builder():
                     f"{endpoint.replace(',','').replace('.','')}",
                     ServiceName=Join("", ["com.amazonaws.", {"Ref": "AWS::Region"}, ".", endpoint]),
                     VpcEndpointType=vpc_endpoint_type(details.get('Type')),
-                    VpcId=Ref(f"{self.name}VPC"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
                     PolicyDocument=details.get('PolicyDocument', NoValue),
                     RouteTableIds=details.get('RouteTableIds') if details.get('Type') == "Gateway" else NoValue,
                     SecurityGroupIds=details.get('SecurityGroupIds') if details.get('Type') == "Interface" else NoValue,
@@ -190,7 +239,7 @@ class builder():
                     f"{secgroup}",
                     GroupName=secgroup,
                     GroupDescription=details.get("GroupDescription", f"{secgroup} Security Group"),
-                    VpcId=Ref(f"{self.name}VPC"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
                     Tags=Tags(details.get("Tags")),
                     SecurityGroupEgress=build_security_group_rules(details.get('SecurityGroupEgress', []))
                 )
@@ -263,7 +312,7 @@ class builder():
             self.template.add_resource(
                 NetworkAcl(
                     f"{networkacl}",
-                    VpcId=Ref(f"{self.name}VPC"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
                     Tags=Tags(details.get("Tags"))
                 )
             )
@@ -305,8 +354,8 @@ class builder():
                     AssignIpv6AddressOnCreation=True if "IPv6" in self.properties("Details", {}) else False,
                     AvailabilityZone=Select(details.get("AZ", 0), GetAZs()),
                     CidrBlock=details.get("CIDR"),
-                    Ipv6CidrBlock=Select(details.get("IPv6Iter"), Cidr(Select(0, GetAtt(f"{self.name}VPC", "Ipv6CidrBlocks")) ,subnet_count, 64)) if "IPv6" in self.properties("Details", {}) else NoValue,
-                    VpcId=Ref(f"{self.name}VPC"),
+                    Ipv6CidrBlock=Select(details.get("IPv6Iter"), Cidr(Select(0, GetAtt(f"{self.properties['Details']['VPCName']}", "Ipv6CidrBlocks")) ,subnet_count, 64)) if "IPv6" in self.properties("Details", {}) else NoValue,
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
                     Tags=Tags(details.get("Tags"))
                 )
             )
@@ -341,7 +390,7 @@ class builder():
             self.template.add_resource(
                 RouteTable(
                     f"{routetable}",
-                    VpcId=Ref(f"{self.name}VPC"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
                     Tags=Tags(details.get("Tags"))
                 )
             )
@@ -362,7 +411,7 @@ class builder():
                     f"{tgw}TransitGWAttach",
                     TransitGatewayId=details.get("TransitGatewayId"),
                     SubnetIds=[Ref(x) for x in details.get("Subnets")],
-                    VpcId=Ref(f"{self.name}VPC"),
+                    VpcId=Ref(f"{self.properties['Details']['VPCName']}"),
                     Tags=Tags(details.get("Tags"))
                 )
             )

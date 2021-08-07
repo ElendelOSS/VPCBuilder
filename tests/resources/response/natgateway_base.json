@@ -1,0 +1,188 @@
+{
+  "InternalRT1NATGW1": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "NatGatewayId": {
+        "Ref": "NATGW1"
+      },
+      "RouteTableId": {
+        "Ref": "InternalRT1"
+      }
+    }
+  },
+  "InternalRT3NATGW3": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "NatGatewayId": {
+        "Ref": "NATGW3"
+      },
+      "RouteTableId": {
+        "Ref": "InternalRT3"
+      }
+    }
+  },
+  "InternalRT2NATGW2": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "DestinationCidrBlock": "0.0.0.0/0",
+      "NatGatewayId": {
+        "Ref": "NATGW2"
+      },
+      "RouteTableId": {
+        "Ref": "InternalRT2"
+      }
+    }
+  },
+  "InternalRT2NATGW2IPv6": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "EgressOnlyInternetGatewayId": {
+        "Ref": "EgressGateway"
+      },
+      "DestinationIpv6CidrBlock": "::/0",
+      "RouteTableId": {
+        "Ref": "InternalRT2"
+      }
+    }
+  },
+  "NATGW3": {
+    "Type": "AWS::EC2::NatGateway",
+    "Properties": {
+      "SubnetId": {
+        "Ref": "ReservedNet3"
+      },
+      "AllocationId": {
+        "Fn::GetAtt": [
+          "EIPNATGW3",
+          "AllocationId"
+        ]
+      },
+      "Tags": [
+        {
+          "Value": "NATGW3",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "NATGW2": {
+    "Type": "AWS::EC2::NatGateway",
+    "Properties": {
+      "SubnetId": {
+        "Ref": "ReservedNet2"
+      },
+      "AllocationId": {
+        "Fn::GetAtt": [
+          "EIPNATGW2",
+          "AllocationId"
+        ]
+      },
+      "Tags": [
+        {
+          "Value": "NATGW2",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "NATGW1": {
+    "Type": "AWS::EC2::NatGateway",
+    "Properties": {
+      "SubnetId": {
+        "Ref": "ReservedNet1"
+      },
+      "AllocationId": {
+        "Fn::GetAtt": [
+          "EIPNATGW1",
+          "AllocationId"
+        ]
+      },
+      "Tags": [
+        {
+          "Value": "NATGW1",
+          "Key": "Name"
+        },
+        {
+          "Key": "Template",
+          "Value": "VPC for private endpoints egress only"
+        },
+        {
+          "Key": "info:environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "info:owner",
+          "Value": "Versent"
+        }
+      ]
+    }
+  },
+  "EIPNATGW2": {
+    "Type": "AWS::EC2::EIP",
+    "Properties": {
+      "Domain": "vpc"
+    }
+  },
+  "EIPNATGW3": {
+    "Type": "AWS::EC2::EIP",
+    "Properties": {
+      "Domain": "vpc"
+    }
+  },
+  "EIPNATGW1": {
+    "Type": "AWS::EC2::EIP",
+    "Properties": {
+      "Domain": "vpc"
+    }
+  },
+  "InternalRT3NATGW3IPv6": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "EgressOnlyInternetGatewayId": {
+        "Ref": "EgressGateway"
+      },
+      "DestinationIpv6CidrBlock": "::/0",
+      "RouteTableId": {
+        "Ref": "InternalRT3"
+      }
+    }
+  },
+  "InternalRT1NATGW1IPv6": {
+    "Type": "AWS::EC2::Route",
+    "Properties": {
+      "EgressOnlyInternetGatewayId": {
+        "Ref": "EgressGateway"
+      },
+      "DestinationIpv6CidrBlock": "::/0",
+      "RouteTableId": {
+        "Ref": "InternalRT1"
+      }
+    }
+  }
+}
