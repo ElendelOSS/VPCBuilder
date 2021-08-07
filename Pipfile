@@ -4,26 +4,19 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-mock = "==1.0.1"
-pytest = "==3.2.1"
-pytest-cov = "==2.5.1"
-hypothesis = "==3.27.1"
-pycodestyle = "==2.4.0"
-coverage = "==4.3.4"
-pynt = "==0.8.1"
-coveralls = ">=1.5.1"
-awscli = ">=1.16.85"
-cfn-lint = ">=0.23.3"
-invoke = "==1.2.0"
-pygithub = ">=1.43.8"
-PyYAML = ">=4.2b1"
+mock = "*"
+pytest = "*"
+pytest-cov = "*"
+cfn-lint = "*"
+pycodestyle = "*"
+invoke = "*"
+pygithub = "*"
+flake8 = "*"
 
 [packages]
-urllib3 = "==1.24.2"
-requests = "==2.21.0"
-boto3 = ">=1.9.86"
-botocore = ">=1.12.86"
-awacs = "*"
+boto3 = "*"
+botocore = "*"
+troposphere = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.8"
